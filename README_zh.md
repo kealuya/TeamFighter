@@ -1,0 +1,13 @@
+# TeamFighter
+
+### 功能介绍
+
+### 开发日志
+20200209
+* electron最新版 + vue3.0框架搭建
+* 引入vantUI
+* 提供测试页面（正常执行，主从线程交互，图片引用问题）
+ 
+### 协议
+
+[CC0 1.0 (Public Domain)](LICENSE.md)
