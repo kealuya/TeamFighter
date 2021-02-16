@@ -17,11 +17,12 @@ function createWindow() {
 
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 400,
+        height: 750,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: false,
+            enableRemoteModule:true,//来打开remote模块，使得渲染进程中可以调用主进程的方法
             nodeIntegration: true,//渲染进程也可以使用node模块，electron引入vue，vue所在窗口与主线程交互必须要true
         },
     })
