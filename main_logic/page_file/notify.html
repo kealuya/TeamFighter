@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>通知</title>
+</head>
+<body>
+<div style="height: 100px;width: 480px">
+    <div id="close" style="text-align: right;font-size: 18px">X</div>
+    <div id="content" style="text-align: left"></div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+    function close() {
+        let remote = window.require("electron").remote
+        remote.getCurrentWindow().close()
+    }
+
+    function getQueryVariable(variable) {
+        let query = window.location.search.substring(1);
+        let vars = query.split("&");
+        for (let i = 0; i < vars.length; i++) {
+            let pair = vars[i].split("=");
+            if (pair[0] === variable) {
+                return pair[1];
+            }
+        }
+        return (false);
+    }
+
+    let ipcRenderer = window.require("electron").ipcRenderer
+    ipcRenderer.on('param', function (event, message) { // 监听父页面定义的端口
+        document.getElementById("content").innerText = message.content
+    });
+
+
+    document.getElementById("close").addEventListener("click", close)
+    setTimeout(function () {
+        close()
+    }, 4000)
+
+</script>
+</html>
