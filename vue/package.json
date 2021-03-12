@@ -9,6 +9,7 @@
   "dependencies": {
     "@vant/touch-emulator": "^1.2.0",
     "core-js": "^3.6.5",
+    "mitt": "^2.1.0",
     "vant": "^3.0.6",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"

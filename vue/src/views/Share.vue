@@ -14,7 +14,7 @@
 import {Button} from 'vant';
 import { Tag } from 'vant';
 export default {
-  name: 'Control',
+  name: 'Share',
   components: {
     [Button.name]: Button,
     [Tag.name]: Tag,

@@ -1,29 +1,67 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
 import Test from '../views/Test.vue'
-import Home2 from '../views/Home2.vue'
+import Home from '../views/Home.vue'
 import About from '../views/About.vue'
+import Setting from "@/views/Setting";
+import Expand from "@/views/Expand";
+import Share from "@/views/Share";
+import Control from "@/views/Control";
+import Login from "@/views/Login";
+import Task from "@/views/Task";
 
 const routes = [
     {
         path: '/',
-        name: 'Test',
-        component: Test
+        name: 'Home',
+        component: Home,
+        children: [
+            {
+                path: '/task',
+                name: 'Task',
+                component: Task
+            },
+            {
+                path: '/expand',
+                name: 'Expand',
+                component: Expand
+            },
+            {
+                path: '/share',
+                name: 'Share',
+                component: Share
+            },
+            {
+                path: '/setting',
+                name: 'Setting',
+                component: Setting
+            },
+            {
+                path: '/control',
+                name: 'Control',
+                component: Control
+            },
+            {
+                path: '/about',
+                name: 'About',
+                // 延迟加载页面在electron中不能使用，待研究
+                // route level code-splitting
+                // this generates a separate chunk (about.[hash].js) for this route
+                // which is lazy-loaded when the route is visited.
+                // component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+                component: About
+            },
+        ]
     },
+    // {
+    //     path: '/',
+    //     name: 'Test',
+    //     component: Test
+    // },
     {
-        path: '/home2',
-        name: 'Home2',
-        component: Home2
+        path: '/login',
+        name: 'Login',
+        component: Login
     },
-    {
-        path: '/about',
-        name: 'About',
-        // 延迟加载页面在electron中不能使用，待研究
-        // route level code-splitting
-        // this generates a separate chunk (about.[hash].js) for this route
-        // which is lazy-loaded when the route is visited.
-        // component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-        component: About
-    }
 ]
 
 const router = createRouter({

@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="home" style="background-color: #c71585">
 
     <img alt="Vue logo" src="../../public/flower_icon.png">
     <HelloWorld msg="2222 to Your Vue.js App"/>
@@ -10,7 +10,7 @@
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
 
-const electron = window.require('electron')
+// const electron = window.require('electron')
 export default {
   name: 'Test',
   components: {
@@ -18,11 +18,11 @@ export default {
   },
   mounted() {
 
-    electron.ipcRenderer.send("get_version")
-    electron.ipcRenderer.on('get_version_reply', (event, arg) => {
-      const message = `异步消息回复: ${arg}`
-      console.log(message);
-    })
+    // electron.ipcRenderer.send("get_version")
+    // electron.ipcRenderer.on('get_version_reply', (event, arg) => {
+    //   const message = `异步消息回复: ${arg}`
+    //   console.log(message);
+    // })
   }
 }
 </script>

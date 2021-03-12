@@ -1,24 +1,33 @@
 <template>
   <div class="about">
-    <h1>This is an about page</h1>
-
-    <van-button square type="primary">方形按钮</van-button>
+    <van-button @click="testNotify" square type="primary">测试消息通知</van-button>
+    <div style="height: 30px"></div>
     <van-button round type="primary">圆形按钮</van-button>
-
-    <van-tag type="success">标签</van-tag>
   </div>
 </template>
 
 <script>
 
 import {Button} from 'vant';
-import { Tag } from 'vant';
+import {Tag} from 'vant';
+
+const electron = window.require('electron')
 export default {
-  name: 'Home',
+  name: 'Control',
   components: {
     [Button.name]: Button,
     [Tag.name]: Tag,
+  },
+  methods: {
+    testNotify: function () {
+
+      electron.ipcRenderer.send("notify", JSON.stringify({msg:"ddddddd"}))
+      electron.ipcRenderer.on('notify_reply', (event, arg) => {
+        const message = `异步消息回复: ${arg}`
+      })
+    }
   }
+
 }
 
 

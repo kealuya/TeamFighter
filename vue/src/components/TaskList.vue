@@ -1,66 +1,111 @@
 <template>
   <div>
-    <div style="height:100%">
+    <div class="my_scroll" style="height:546px;overflow-y:scroll">
       <!--      <van-pull-refresh v-model="state.refreshing" @refresh="onRefresh">-->
       <van-list
           v-model:loading="state.loading"
           :finished="state.finished"
-          finished-text="没有更多了"
+          finished-text="干完了(*⊙~⊙)"
           @load="onLoad"
       >
         <template v-for="item in state.list" :key="item">
           <div style="width: 100%;height: 90px;">
             <div
                 @contextmenu.prevent.native="rightClick(item,$event)"
-                style="margin: 15px;height: 100%;border:1px solid whitesmoke;box-shadow: 1px 1px 5px #bbb;
+                style="margin: 15px;height: 100%;border:1px solid whitesmoke;box-shadow: rgb(222 222 222) 3px 3px 5px  ;
                     display: flex;flex-direction: row;align-items: center;justify-content: center">
 
-              <div style="flex:3;display: flex;justify-content: center">
+              <div style=" display: flex;flex-direction: column;justify-content: center;align-items: center">
                 <!--                <img src="../../public/目标.png" style="width: 30px;height:30px;">-->
-                <div @click="showFromName(item)" class="font" :style="{background:getColorFromId(item.fromId)}">
-                  {{ item.fromName }}
+                <div style="width: 45px;height:45px;" @click="showFromName(item)">
+                  <!--                  {{ item.fromName.substr(0, 2) }}-->
+                  <img :src="getAvatar(item.avatar)" style="width: 45px;height:45px;">
                 </div>
               </div>
               <div style="flex: 21; height: 90%;width: 80%;font-size: 14px;display: flex;flex-direction: column; justify-content: space-between;
-                  padding-left: 10px;padding-right: 10px;padding-top: 5px">
+                  padding : 5px">
                 <div style=" text-align: start;height: 28px;border-bottom: 1px solid red;
                     text-overflow:ellipsis;white-space:nowrap;overflow:hidden;">
-                  Todo：{{ item.todo }}
+                  {{ item.todo }}
                 </div>
                 <div style="text-align: end">
-                  <van-tag style="margin-left: 10px" type="primary">Bug</van-tag>
-                  <van-tag style="margin-left: 10px" type="success">额外</van-tag>
-                  <van-tag style="margin-left: 10px" type="warning">待确认</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">Bug</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">2天</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">详情</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" type="danger">待确认</van-tag>
                 </div>
                 <div style="display: flex;justify-content: space-between;align-items: center">
                   <van-slider :step="25" v-model="item.progress" active-color="#ee0a24">
                     <template #button>
-                      <div class="custom-button">{{ item.progress }}</div>
+                      <div class="task-list-custom-button">{{ item.progress }}</div>
                     </template>
                   </van-slider>
                   <div style="width: 40px"></div>
                   <van-rate v-model="item.stars" :count="3"/>
                 </div>
               </div>
-
             </div>
           </div>
-
         </template>
       </van-list>
       <!--      </van-pull-refresh>-->
-
     </div>
-    <div style="width: 100%">
-
+    <!--    任务录入-->
+    <div style="height: 99px;width: 100%;border-top:1px solid whitesmoke">
+      <van-field class="my_scroll" style="height: 70px"
+                 v-model="todo"
+                 rows="1"
+                 label="事项"
+                 type="textarea"
+                 maxlength="30"
+                 placeholder="待办事项"
+                 show-word-limit
+                 colon
+                 label-width="40"
+      />
+      <div style="height: 29px;width: 100%">
+        <van-row justify="start">
+          <van-col span="5">
+            <van-popover placement="top" v-model:show="todo_type_popover" :actions="todo_type_actions"
+                         @select="todoTypeSelect">
+              <template #reference>
+                <van-button style="width:60px" plain type="primary" size="mini">{{ todo_type_val }}</van-button>
+              </template>
+            </van-popover>
+          </van-col>
+          <van-col span="5">
+            <van-popover placement="top" v-model:show="todo_user_show">
+              <div class="my_scroll" style="height: 120px;width: 84px;overflow-y: scroll">
+                <template v-for="user in todo_user_list">
+                  <div style="font-size: 10px;width: 80px;height: 22px;text-align: center;"
+                       @click="todoUserSelect(user)">
+                    {{ user.userName }}
+                  </div>
+                </template>
+              </div>
+              <template #reference>
+                <van-button style="width:60px" plain type="primary" size="mini">{{ todo_user_val }}</van-button>
+              </template>
+            </van-popover>
+          </van-col>
+          <van-col span="12">
+            <van-row justify="end">
+              <van-col>
+                <van-button @click="todoSend" style="width:60px" type="danger" size="mini">提交</van-button>
+              </van-col>
+            </van-row>
+          </van-col>
+        </van-row>
+      </div>
     </div>
   </div>
+
 </template>
 
 <script>
-import {reactive} from 'vue';
+import {reactive, ref} from 'vue';
 import '@vant/touch-emulator';
-import {List, Rate, Cell, Col, Row, Slider, Tag, Popover} from 'vant';
+import {List, Rate, Cell, Col, Row, Slider, Tag, Popover, Field, Button} from 'vant';
 //vue3.0 global组件
 import {getCurrentInstance} from 'vue';
 import utils from "@/utils/common";
@@ -77,17 +122,76 @@ export default {
     [Slider.name]: Slider,
     [Tag.name]: Tag,
     [Popover.name]: Popover,
+    [Field.name]: Field,
+    [Button.name]: Button,
   },
   data() {
     return {
       sort: "createTime", // createTime,stars,
-
+      todo: "",
+      todo_type_popover: false,
+      todo_type_actions: [],
+      todo_type_val: "工作",
+      todo_user_show: false,
+      todo_user_val: "自己",
+      todo_user_id_val: "",
+      todo_user_list: [
+        {userId: "111", userName: "智能柜1"},
+        {userId: "131", userName: "智能柜2"},
+        {userId: "1151", userName: "智能柜3"},
+        {userId: "1161", userName: "智能柜4"},
+        {userId: "1131", userName: "智能柜5"},
+        {userId: "131", userName: "智能柜2"},
+        {userId: "1151", userName: "智能柜3"},
+        {userId: "1161", userName: "智能柜4"},
+        {userId: "1131", userName: "智能柜5"},
+      ]
     }
+  },
+  beforeUnmount() {
+    // 解除快捷键绑定
+    window.removeEventListener('keydown', this.shortcut)
   },
   created() {
     remote = window.require("electron").remote
+    // 追加快捷键绑定
+    window.addEventListener('keydown', this.shortcut)
+
+    // to do type的初始化设定
+    this.todo_type_popover = false;
+    this.todo_type_actions = [
+      {text: '工作', className: 'task-list-msg-type-class'},
+      {text: 'Bug', className: 'task-list-msg-type-class'},
+      {text: '变更', className: 'task-list-msg-type-class'},
+    ];
+
   },
   methods: {
+    getAvatar: function (a) {
+      return utils.avatars[a]
+    },
+    todoUserSelect: function (user) {
+      this.todo_user_val = user.userName
+      this.todo_user_id_val = user.userId
+      this.todo_user_show = false
+    },
+    todoSend: function () {
+
+      this.eventBus.emit('title_notify', { msg: '操作成功' })
+      //恢复原样
+      this.todo_type_val = "工作"
+      this.todo_user_val = "自己"
+      this.todo_user_id_val = ""
+
+    },
+    todoTypeSelect: function (action, index) {
+      this.todo_type_val = action.text
+    },
+    shortcut: function (e) {
+      if (e.ctrlKey && e.keyCode === 13) {   //用户点击了ctrl+enter触发
+        this.todoSend()
+      }
+    },
     rightClick: function (item, $event) {
       let thatOnRefresh = this.onRefresh
       const {Menu, MenuItem} = remote
@@ -105,9 +209,15 @@ export default {
 
         }
       }))
+      menu.append(new MenuItem({
+        label: '  废弃  ',
+        click() {
+
+        }
+      }))
       menu.append(new MenuItem({type: 'separator'}))
       menu.append(new MenuItem({
-        label: '  额外  ',
+        label: '  详情  ',
         click() {
 
         }
@@ -175,14 +285,15 @@ export default {
     },
     showFromName: function () {
 
+    },
+    keyDown: function (e) {
+      console.log(e)
+      if (e.ctrlKey && e.keyCode === 13) {   //用户点击了ctrl+enter触发
+        console.log(this.todo)
+      }
     }
   },
-  computed: {
-    screenHeight: () => {
-      const {ctx} = getCurrentInstance();
-      return ctx.$screenHeight() + 'px'
-    }
-  },
+  computed: {},
   setup() {
 
     const state = reactive({
@@ -207,6 +318,7 @@ export default {
             stars: 2,
             state: "wait",//waiting confirmed done
             info: "",
+            avatar: 2,
             progress: 30,
           });
         }
@@ -218,6 +330,7 @@ export default {
           stars: 3,
           state: "wait",//waiting confirmed done
           info: "",
+          avatar: 12,
           progress: 50,
         });
         state.list.push({
@@ -227,6 +340,7 @@ export default {
           stars: 3,
           state: "wait",//waiting confirmed done
           info: "春晓，王安石",
+          avatar: 6,
           progress: 90,
         });
 
@@ -250,6 +364,7 @@ export default {
       onLoad();
     };
 
+
     return {
       state,
       onLoad,
@@ -261,8 +376,8 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.font {
+<style>
+.task-list-font {
   width: 30px;
   height: 30px;
   top: 30px;
@@ -274,7 +389,7 @@ export default {
   text-align: center;
 }
 
-.custom-button {
+.task-list-custom-button {
   width: 26px;
   color: #fff;
   font-size: 10px;
@@ -282,5 +397,22 @@ export default {
   text-align: center;
   background-color: #ee0a24;
   border-radius: 100px;
+}
+
+.task-list-msg-type-class {
+  font-size: 10px;
+  height: 22px;
+}
+
+/*滚动条样式设定*/
+.my_scroll::-webkit-scrollbar {
+  width: 3px;
+  /*height: 100px;*/
+}
+
+/*滚动条样式设定*/
+.my_scroll::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #cbcbcb;
 }
 </style>
