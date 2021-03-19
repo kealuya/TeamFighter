@@ -17,6 +17,8 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^11.2.2"
+    "axios": "^0.21.1",
+    "electron": "^11.2.2",
+    "log4js": "^6.3.0"
   }
 }

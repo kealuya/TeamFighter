@@ -17,7 +17,20 @@ import headImg14 from '../../public/profile/default14.png'
 import logoImg from '../../public/logo.png'
 import teamFighter from '../../public/内卷系统.png'
 
+const electron = window.require('electron')
+
 let utils = {
+    // nodejs ipcRenderer 交互
+    ipcAccess: function (channel, arg) {
+        return new Promise((resolve, reject) => {
+            electron.ipcRenderer.send(channel, arg)
+            electron.ipcRenderer.on(channel + '_reply', (event, arg) => {
+                resolve(arg)
+            })
+        })
+    },
+
+
     avatars: [
         headImg0,
         headImg1,
@@ -76,6 +89,8 @@ let utils = {
     },
     picLogo: logoImg,
     picTeamFighter: teamFighter,
+
+
 }
 
 export default utils;

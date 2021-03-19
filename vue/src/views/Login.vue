@@ -17,15 +17,17 @@
       <van-field v-model="password" type="password" label="密码" placeholder="请输入密码"/>
     </div>
 
-    <div style="width: 200px;margin: 30px;"/>
+    <div id="msg" style="width: 200px;height: 30px;font-size: 14px;color: red">
 
-    <van-button style="width: 200px" square type="primary">登录</van-button>
+    </div>
+
+    <van-button @click="login" style="width: 200px" square type="primary">登录</van-button>
 
     <div style="width: 200px;margin: 10px;"/>
-    <van-button style="width: 200px" square type="primary">退出</van-button>
+    <van-button @click="logout" style="width: 200px" square type="primary">退出</van-button>
     <div style="width: 200px;margin: 45px;"/>
     <div style="text-align: right">
-      version 0.2
+      version 0.2.11
     </div>
   </div>
 </template>
@@ -54,6 +56,26 @@ export default {
       logo: utils.picLogo,
       username: "",
       password: "",
+    }
+  },
+  methods: {
+    login: function () {
+      utils.ipcAccess("http", {
+        url: "http://localhost:8000/v1/t/testPost",
+        method: "post",
+        parameter: {username: this.username, password: this.password,}
+      }).then(value => {
+        
+      })
+
+
+    },
+    logout: function () {
+      console.log("quit")
+      utils.ipcAccess("operate", {
+        operate: "quit",
+        parameter: ""
+      })
     }
   }
 }

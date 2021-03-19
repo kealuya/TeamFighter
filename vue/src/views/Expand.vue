@@ -59,7 +59,7 @@ export default {
           content: "吃饭了"
         }
       };
-      electron.ipcRenderer.send("expand", JSON.stringify(p))
+      electron.ipcRenderer.send("expand",  p)
       electron.ipcRenderer.on('expand_reply', (event, arg) => {
         const message = `异步消息回复: ${arg}`
         console.log(message);
