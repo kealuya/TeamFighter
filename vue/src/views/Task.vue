@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <van-tabs v-model:active="tab_active" color="#ee0a24">
+    <van-tabs v-model:active="tab_active">
       <van-tab>
         <template #title>
           <van-icon name="todo-list-o"/>

@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="my_scroll" style="height:546px;overflow-y:scroll">
-      <!--      <van-pull-refresh v-model="state.refreshing" @refresh="onRefresh">-->
+      <!-- 不需要下拉刷新，使用右键刷新菜单，下拉刷新不应该出现在pc端
+           <van-pull-refresh v-model="state.refreshing" @refresh="onRefresh">-->
       <van-list
           v-model:loading="state.loading"
           :finished="state.finished"
@@ -10,37 +11,45 @@
       >
         <template v-for="item in state.list" :key="item">
           <div style="width: 100%;height: 90px;">
-            <div
-                @contextmenu.prevent.native="rightClick(item,$event)"
-                style="margin: 15px;height: 100%;border:1px solid whitesmoke;box-shadow: rgb(222 222 222) 3px 3px 5px  ;
+            <!--右键菜单div，在范围内可以右键-->
+            <div @contextmenu.prevent.native="rightClick(item,$event)"
+                 style="margin: 15px;height: 100%;border:1px solid whitesmoke;box-shadow: rgb(222 222 222) 3px 3px 5px  ;
                     display: flex;flex-direction: row;align-items: center;justify-content: center">
-
+              <!--任务单元-->
+              <!--左侧头像、人名部分-->
               <div style=" display: flex;flex-direction: column;justify-content: center;align-items: center">
-                <!--                <img src="../../public/目标.png" style="width: 30px;height:30px;">-->
+                <!--头像图片-->
                 <div style="width: 45px;height:45px;" @click="showFromName(item)">
-                  <!--                  {{ item.fromName.substr(0, 2) }}-->
                   <img :src="getAvatar(item.avatar)" style="width: 45px;height:45px;">
                 </div>
+                <!--头像人名-->
+                <div style="font-size: 10px">六三</div>
               </div>
+              <!--右侧代办任务部分-->
               <div style="flex: 21; height: 90%;width: 80%;font-size: 14px;display: flex;flex-direction: column; justify-content: space-between;
                   padding : 5px">
-                <div style=" text-align: start;height: 28px;border-bottom: 1px solid red;
+                <!--任务事项-->
+                <div style=" text-align: start;height: 28px;border-bottom: 1px solid #ebedf0;
                     text-overflow:ellipsis;white-space:nowrap;overflow:hidden;">
                   {{ item.todo }}
                 </div>
+                <!--任务属性-->
                 <div style="text-align: end">
                   <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">Bug</van-tag>
                   <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">2天</van-tag>
                   <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">详情</van-tag>
-                  <van-tag style="margin-left: 10px;font-size: 10px" type="danger">待确认</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" type="primary">待确认</van-tag>
                 </div>
+                <!--任务情况-->
                 <div style="display: flex;justify-content: space-between;align-items: center">
-                  <van-slider :step="25" v-model="item.progress" active-color="#ee0a24">
+                  <!--任务进度-->
+                  <van-slider :step="25" v-model="item.progress">
                     <template #button>
                       <div class="task-list-custom-button">{{ item.progress }}</div>
                     </template>
                   </van-slider>
                   <div style="width: 40px"></div>
+                  <!--任务优先级-->
                   <van-rate v-model="item.stars" :count="3"/>
                 </div>
               </div>
@@ -48,10 +57,10 @@
           </div>
         </template>
       </van-list>
-      <!--      </van-pull-refresh>-->
     </div>
-    <!--    任务录入-->
+    <!--任务录入-->
     <div style="height: 99px;width: 100%;border-top:1px solid whitesmoke">
+      <!--任务录入框-->
       <van-field class="my_scroll" style="height: 70px"
                  v-model="todo"
                  rows="1"
@@ -65,6 +74,7 @@
       />
       <div style="height: 29px;width: 100%">
         <van-row justify="start">
+          <!--任务类型-->
           <van-col span="5">
             <van-popover placement="top" v-model:show="todo_type_popover" :actions="todo_type_actions"
                          @select="todoTypeSelect">
@@ -73,6 +83,7 @@
               </template>
             </van-popover>
           </van-col>
+          <!--任务指向人-->
           <van-col span="5">
             <van-popover placement="top" v-model:show="todo_user_show">
               <div class="my_scroll" style="height: 120px;width: 84px;overflow-y: scroll">
@@ -88,10 +99,11 @@
               </template>
             </van-popover>
           </van-col>
+          <!--任务提交按钮-->
           <van-col span="12">
             <van-row justify="end">
               <van-col>
-                <van-button @click="todoSend" style="width:60px" type="danger" size="mini">提交</van-button>
+                <van-button @click="todoSend" style="width:60px" type="primary" size="mini">提交</van-button>
               </van-col>
             </van-row>
           </van-col>
@@ -131,7 +143,7 @@ export default {
       todo: "",
       todo_type_popover: false,
       todo_type_actions: [],
-      todo_type_val: "工作",
+      todo_type_val: "需求",
       todo_user_show: false,
       todo_user_val: "自己",
       todo_user_id_val: "",
@@ -160,13 +172,15 @@ export default {
     // to do type的初始化设定
     this.todo_type_popover = false;
     this.todo_type_actions = [
-      {text: '工作', className: 'task-list-msg-type-class'},
+      {text: '需求', className: 'task-list-msg-type-class'},
       {text: 'Bug', className: 'task-list-msg-type-class'},
-      {text: '变更', className: 'task-list-msg-type-class'},
+      {text: '整理', className: 'task-list-msg-type-class'},
+      {text: '颠覆', className: 'task-list-msg-type-class'},
     ];
 
   },
   methods: {
+    // 获取头像图片
     getAvatar: function (a) {
       return utils.avatars[a]
     },
@@ -177,9 +191,9 @@ export default {
     },
     todoSend: function () {
 
-      this.eventBus.emit('title_notify', { msg: '操作成功' })
+      this.eventBus.emit('title_notify', {msg: '操作成功'})
       //恢复原样
-      this.todo_type_val = "工作"
+      this.todo_type_val = "需求"
       this.todo_user_val = "自己"
       this.todo_user_id_val = ""
 
@@ -395,7 +409,8 @@ export default {
   font-size: 10px;
   line-height: 18px;
   text-align: center;
-  background-color: #ee0a24;
+  /*TMD all_color 颜色 */
+  background-color: #29b7cb;
   border-radius: 100px;
 }
 

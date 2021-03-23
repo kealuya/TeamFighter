@@ -8,6 +8,7 @@ import Share from "@/views/Share";
 import Control from "@/views/Control";
 import Login from "@/views/Login";
 import Task from "@/views/Task";
+import Notify from "@/views/Notify";
 
 const routes = [
     {
@@ -57,10 +58,17 @@ const routes = [
     //     name: 'Test',
     //     component: Test
     // },
+    // 登录页面专用
     {
         path: '/login',
         name: 'Login',
         component: Login
+    },
+    // 消息通知页面专用
+    {
+        path: '/notify',
+        name: 'Notify',
+        component: Notify
     },
 ]
 

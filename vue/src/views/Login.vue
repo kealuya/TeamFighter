@@ -17,8 +17,14 @@
       <van-field v-model="password" type="password" label="密码" placeholder="请输入密码"/>
     </div>
 
-    <div id="msg" style="width: 200px;height: 30px;font-size: 14px;color: red">
-
+    <div style="width: 300px;
+    height: 40px;
+    font-size: 14px;
+    color: red;
+     white-space:normal;
+     word-break:break-all;
+     word-wrap:break-word; ">
+      {{ msg }}
     </div>
 
     <van-button @click="login" style="width: 200px" square type="primary">登录</van-button>
@@ -56,19 +62,41 @@ export default {
       logo: utils.picLogo,
       username: "",
       password: "",
+      msg: ""
     }
+  },
+  created() {
+
+    utils.ipcAccess("store", {
+      method: "get",
+      payload: [utils.storeKey.userInfo]
+    }).then(result => {
+      if (result != null) {
+        utils.ipcAccess("operate", {operate: "login"})
+      }
+    })
   },
   methods: {
     login: function () {
+
+      this.msg = ""
+      if (this.username.trim() === "" || this.password.trim() === "") {
+        this.msg = "用户名或密码不正确"
+        return
+      }
+
       utils.ipcAccess("http", {
-        url: "http://localhost:8000/v1/t/testPost",
+        url: utils.httpBaseUrl + "b/login",
         method: "post",
         parameter: {username: this.username, password: this.password,}
-      }).then(value => {
-        
+      }).then(ro => {
+        if (!ro.success) {
+          this.msg = ro.msg.replace("\r").replace("\n")
+        } else {
+          this.msg = ""
+          utils.ipcAccess("operate", {operate: "login"})
+        }
       })
-
-
     },
     logout: function () {
       console.log("quit")

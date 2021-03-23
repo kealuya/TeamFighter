@@ -1,3 +1,5 @@
+// 用import获取头像图片，可以作为对象进行处理，很方便
+// <img :src="getAvatar(item.avatar)" style="width: 45px;height:45px;"> 这样引入
 import headImg0 from '../../public/profile/default0.png'
 import headImg1 from '../../public/profile/default1.png'
 import headImg2 from '../../public/profile/default2.png'
@@ -20,7 +22,7 @@ import teamFighter from '../../public/内卷系统.png'
 const electron = window.require('electron')
 
 let utils = {
-    // nodejs ipcRenderer 交互
+    // nodejs ipcRenderer 交互，通过promise进行封装
     ipcAccess: function (channel, arg) {
         return new Promise((resolve, reject) => {
             electron.ipcRenderer.send(channel, arg)
@@ -29,8 +31,7 @@ let utils = {
             })
         })
     },
-
-
+    // 头像图片对象数组
     avatars: [
         headImg0,
         headImg1,
@@ -48,6 +49,7 @@ let utils = {
         headImg13,
         headImg14,
     ],
+    //通过id自动生成对应颜色
     getColorFromId: (fromId) => {
         let color = "#FFF"
         switch (fromId.substr(fromId.length - 1, 1)) {
@@ -87,9 +89,16 @@ let utils = {
         }
         return color
     },
+    //公司logo
     picLogo: logoImg,
+    //系统title的logo图片
     picTeamFighter: teamFighter,
-
+    // kv存储对应key值，防止key值写错
+    /*🎉*/storeKey: {
+        userInfo: "userInfo",
+    },
+    //基础请求路径，后续通过配置进行选择
+    /*🎉*/httpBaseUrl: "http://localhost:8000/v1/"
 
 }
 
