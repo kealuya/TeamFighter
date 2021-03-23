@@ -21,7 +21,7 @@ export default {
   methods: {
     testNotify: function () {
 
-      electron.ipcRenderer.send("notify", {msg: "ddddddd"})
+      electron.ipcRenderer.send("notify", {content: "三级分类经二路",title:"2222323"})
       electron.ipcRenderer.on('notify_reply', (event, arg) => {
         const message = `异步消息回复: ${arg}`
       })

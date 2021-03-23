@@ -49,10 +49,10 @@ let hook = function () {
         const {width, height} = screen.getPrimaryDisplay().workAreaSize
 
         const win = new BrowserWindow({
-            width: 500, height: 120,
+            width: 450, height: 120,
             title: "TeamFighter -- 通知",
             resizable: false,
-            x: width - 500,
+            x: width - 450,
             y: height - 120,
             alwaysOnTop: true,
             frame: false,
@@ -74,10 +74,11 @@ let hook = function () {
             win.loadFile(notifyURL)
         }
         win.webContents.on('did-finish-load', function () {
-            win.webContents.send('param', {"content": "我是消息哦"});
+            win.webContents.send('param', arg);
+            event.sender.send('notify_reply', {"msg": "通知发送成功", "success": true});
         });
-        mainWindow.webContents.openDevTools();
-        event.sender.send('notify_reply', {"msg": "通知发送成功", "success": true});
+        // win.webContents.openDevTools();
+
     })
 
     /*

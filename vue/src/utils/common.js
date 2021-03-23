@@ -16,8 +16,9 @@ import headImg12 from '../../public/profile/default12.png'
 import headImg13 from '../../public/profile/default13.png'
 import headImg14 from '../../public/profile/default14.png'
 //================================================================//
-import logoImg from '../../public/logo.png'
-import teamFighter from '../../public/内卷系统.png'
+import pic_logo from '../../public/logo.png'
+import pic_teamFighter from '../../public/内卷系统.png'
+import picMsgMainLogo from '../../public/picMsgMainLogo.png'
 
 const electron = window.require('electron')
 
@@ -90,9 +91,10 @@ let utils = {
         return color
     },
     //公司logo
-    picLogo: logoImg,
+    picLogo: pic_logo,
     //系统title的logo图片
-    picTeamFighter: teamFighter,
+    picTeamFighter: pic_teamFighter,
+    picMsgMainLogo: picMsgMainLogo,
     // kv存储对应key值，防止key值写错
     /*🎉*/storeKey: {
         userInfo: "userInfo",
