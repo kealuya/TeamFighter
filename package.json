@@ -20,5 +20,8 @@
     "axios": "^0.21.1",
     "electron": "^11.2.2",
     "log4js": "^6.3.0"
+  },
+  "dependencies": {
+    "level": "^6.0.1"
   }
 }
