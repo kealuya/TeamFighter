@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const mongoUrl = `mongodb://renhao:renhao666@122.9.41.45:27017/admin?authSource=admin`
+const mongoUrl = `mongodb://x`
 
 func main() {
 
