@@ -20,16 +20,15 @@ func init() {
 				beego.NSRouter("/login", &UserController{}, "Post:Login"),
 			),
 
-
 			beego.NSNamespace("/t", //test
 				beego.NSRouter("/test", &TestController{}, "get:Test"),
 				beego.NSRouter("/testPost", &TestController{}, "Post:TestPost"),
 			),
 			//http://szht.natapp1.cc/v1/r/state_receive
-			beego.NSNamespace("/r", //receive
+			/*beego.NSNamespace("/r", //receive
 				beego.NSRouter("/state_receive", &StateController{}, "post:StateReceive"),
 				beego.NSRouter("/template_receive", &StateController{}, "post:TemplateReceive"),
-			),
+			),*/
 		)
 	//注册 namespace
 	beego.AddNamespace(namespace)
@@ -49,7 +48,6 @@ func init() {
 	//beego.InsertFilter("/v1/s/add_sms_template", beego.BeforeExec, filter2)
 
 }
- 
 
 func makeResultResponse(s bool, m string) string {
 	rr := ResultResponse{
