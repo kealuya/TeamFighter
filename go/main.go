@@ -1,16 +1,15 @@
 package main
 
 import (
-	"github.com/astaxie/beego"
 	_ "team_fighter_go/configs" //系统初始化
-	"team_fighter_go/controllers"
+	"team_fighter_go/db"
 	_ "team_fighter_go/routers"
 )
 
 func main() {
-
-	beego.ErrorController(&controllers.ErrorController{}) //错误页面处理
-	beego.Run()
+	db.ObtainMongoClient()
+	//beego.ErrorController(&controllers.ErrorController{}) //错误页面处理
+	//beego.Run()
 
 	//
 	//

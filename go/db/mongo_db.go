@@ -7,16 +7,33 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"sync"
+	"team_fighter_go/conf"
 	"time"
 )
 
-const mongoUrl = `mongodb://renhao:renhao666@122.9.41.45:27017/admin?authSource=admin`
+var mongoClient *mongo.Client
+var once sync.Once
+
+func ObtainMongoClient() *mongo.Client {
+
+	once.Do(func() {
+		ctx := context.Background()
+		client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.GetConfigWithKey("db.mongoUrl")))
+		if err != nil {
+			log.Panicln(err)
+		}
+		mongoClient = client
+	})
+
+	return mongoClient
+}
 
 func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongoUrl"))
 
 	defer func() {
 		if err = client.Disconnect(ctx); err != nil {
