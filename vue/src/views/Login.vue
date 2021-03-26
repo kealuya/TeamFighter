@@ -11,13 +11,20 @@
     </div>
 
     <div style="display: flex;width: 100%;justify-content: center">
-      <van-field v-model="username" type="number" label="工号" placeholder="请输入工号"/>
+      <van-field v-model="userid" type="number" label="工号" placeholder="请输入工号"/>
     </div>
     <div style="display: flex;width: 100%;justify-content: center">
       <van-field v-model="password" type="password" label="密码" placeholder="请输入密码"/>
     </div>
+    <div style="display: flex;width: 100%;justify-content: center;margin-top: 20px">
+      <van-radio-group v-model="channel" direction="horizontal">
+        <van-radio name="htjy">浩天教育</van-radio>
+        <van-radio name="test">测试组</van-radio>
+      </van-radio-group>
+    </div>
 
-    <div style="width: 300px;
+
+    <div style="display: flex;width: 100%;justify-content: center;
     height: 40px;
     font-size: 14px;
     color: red;
@@ -43,7 +50,7 @@
 import {Button} from 'vant';
 import {Tag} from 'vant';
 import {Field} from 'vant';
-import {Col, Row} from 'vant';
+import {Col, Row, Picker, RadioGroup, Radio} from 'vant';
 
 import utils from "@/utils/common";
 
@@ -55,14 +62,18 @@ export default {
     [Field.name]: Field,
     [Col.name]: Col,
     [Row.name]: Row,
+    [RadioGroup.name]: RadioGroup,
+    [Radio.name]: Radio,
+
   },
   data() {
     return {
       teamFighter: utils.picTeamFighter,
       logo: utils.picLogo,
-      username: "",
+      userid: "",
       password: "",
-      msg: ""
+      msg: "",
+      channel: "htjy",
     }
   },
   created() {
@@ -80,7 +91,7 @@ export default {
     login: function () {
 
       this.msg = ""
-      if (this.username.trim() === "" || this.password.trim() === "") {
+      if (this.userid.trim() === "" || this.password.trim() === "") {
         this.msg = "用户名或密码不正确"
         return
       }
@@ -88,13 +99,16 @@ export default {
       utils.ipcAccess("http", {
         url: utils.httpBaseUrl + "b/login",
         method: "post",
-        parameter: {username: this.username, password: this.password,}
+        parameter: {userid: this.userid, password: this.password,}
       }).then(ro => {
         if (!ro.success) {
           this.msg = ro.msg.replace("\r").replace("\n")
         } else {
-          this.msg = ""
-          utils.ipcAccess("operate", {operate: "login"})
+          if (ro.data.count !== 1) {
+            this.msg = "工号或密码输入不正确"
+          } else {
+            utils.ipcAccess("operate", {operate: "login"})
+          }
         }
       })
     },

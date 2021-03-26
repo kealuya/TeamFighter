@@ -93,7 +93,8 @@ func Try(fn func()) (err error) {
 			var ok bool
 			err, ok = val.(error)
 			if !ok {
-				err = errors.New("")
+				logs.Error("common.Try方法中错误转换错误::", val)
+				err = errors.New("common.Try方法中错误转换错误")
 			}
 		}
 	}()

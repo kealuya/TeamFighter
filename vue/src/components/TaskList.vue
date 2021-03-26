@@ -29,9 +29,21 @@
               <div style="flex: 21; height: 90%;width: 80%;font-size: 14px;display: flex;flex-direction: column; justify-content: space-between;
                   padding : 5px">
                 <!--任务事项-->
-                <div style=" text-align: start;height: 28px;border-bottom: 1px solid #ebedf0;
-                    text-overflow:ellipsis;white-space:nowrap;overflow:hidden;">
-                  {{ item.todo }}
+                <div style=" display: flex;justify-content: space-between;border-bottom: 1px solid #ebedf0;
+                    ">
+                  <div
+                      style="text-align: left;width: 200px;height: 28px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;">
+                    {{ item.todo }}
+                  </div>
+                  <div>
+                    <template v-if="item.direction ==='out'">
+                      <van-icon name="share" size="20" color="#29b7cb"/>
+                    </template>
+                    <template v-if="item.direction ==='in'">
+                      <img :src="picMission" style="width: 20px;height: 20px"/>
+                    </template>
+
+                  </div>
                 </div>
                 <!--任务属性-->
                 <div style="text-align: end">
@@ -43,14 +55,14 @@
                 <!--任务情况-->
                 <div style="display: flex;justify-content: space-between;align-items: center">
                   <!--任务进度-->
-                  <van-slider :step="25" v-model="item.progress">
+                  <van-slider :step="25" v-model="item.progress" :readonly="item.direction==='out'">
                     <template #button>
                       <div class="task-list-custom-button">{{ item.progress }}</div>
                     </template>
                   </van-slider>
                   <div style="width: 40px"></div>
                   <!--任务优先级-->
-                  <van-rate v-model="item.stars" :count="3"/>
+                  <van-rate :readonly="item.direction==='out'" v-model="item.stars" :count="3"/>
                 </div>
               </div>
             </div>
@@ -117,7 +129,7 @@
 <script>
 import {reactive, ref} from 'vue';
 import '@vant/touch-emulator';
-import {List, Rate, Cell, Col, Row, Slider, Tag, Popover, Field, Button} from 'vant';
+import {List, Rate, Cell, Col, Row, Slider, Tag, Icon, Popover, Field, Button} from 'vant';
 //vue3.0 global组件
 import {getCurrentInstance} from 'vue';
 import utils from "@/utils/common";
@@ -136,6 +148,7 @@ export default {
     [Popover.name]: Popover,
     [Field.name]: Field,
     [Button.name]: Button,
+    [Icon.name]: Icon,
   },
   data() {
     return {
@@ -157,7 +170,8 @@ export default {
         {userId: "1151", userName: "智能柜3"},
         {userId: "1161", userName: "智能柜4"},
         {userId: "1131", userName: "智能柜5"},
-      ]
+      ],
+      picMission: utils.picMission,
     }
   },
   beforeUnmount() {
@@ -308,8 +322,8 @@ export default {
     }
   },
   computed: {},
-  setup() {
 
+  setup() {
     const state = reactive({
       list: [],
       loading: false,
@@ -334,6 +348,7 @@ export default {
             info: "",
             avatar: 2,
             progress: 30,
+            direction: "",
           });
         }
 
@@ -341,23 +356,24 @@ export default {
           todo: "必须今天下午之前把文档打印好2222111114444",
           fromName: "张三个",
           fromId: "112342",
-          stars: 3,
+          stars: 1,
           state: "wait",//waiting confirmed done
           info: "",
           avatar: 12,
           progress: 50,
+          direction: "out",
         });
         state.list.push({
           todo: "春眠不觉晓，处处闻啼鸟，夜处处闻啼鸟，夜来风雨声，花落知多少",
           fromName: "李四喜",
           fromId: "112349",
-          stars: 3,
+          stars: 1,
           state: "wait",//waiting confirmed done
           info: "春晓，王安石",
           avatar: 6,
           progress: 90,
+          direction: "in",
         });
-
 
         state.loading = false;
 

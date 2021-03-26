@@ -19,6 +19,7 @@ import headImg14 from '../../public/profile/default14.png'
 import pic_logo from '../../public/logo.png'
 import pic_teamFighter from '../../public/内卷系统.png'
 import picMsgMainLogo from '../../public/picMsgMainLogo.png'
+import picMission from '../../public/铃铛.png'
 
 const electron = window.require('electron')
 
@@ -95,6 +96,7 @@ let utils = {
     //系统title的logo图片
     picTeamFighter: pic_teamFighter,
     picMsgMainLogo: picMsgMainLogo,
+    picMission: picMission,
     // kv存储对应key值，防止key值写错
     /*🎉*/storeKey: {
         userInfo: "userInfo",

@@ -14,19 +14,20 @@ import (
 
 var mongoClient *mongo.Client
 var once sync.Once
+var ctx = context.Background()
 
-func ObtainMongoClient() *mongo.Client {
+func ObtainMongoCollection(collection string) (*mongo.Collection, context.Context) {
 
 	once.Do(func() {
+		url := conf.GetConfigWithKey("db.mongoUrl")
 		ctx := context.Background()
-		client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.GetConfigWithKey("db.mongoUrl")))
+		client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
 		if err != nil {
 			log.Panicln(err)
 		}
 		mongoClient = client
 	})
-
-	return mongoClient
+	return mongoClient.Database("team_fighter").Collection(collection), ctx
 }
 
 func main() {

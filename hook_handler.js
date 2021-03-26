@@ -109,7 +109,7 @@ let hook = function () {
 
         //登录成功
         let func_login = function () {
-            // loginWindow.close()//关闭登录页面
+            loginWindow.close()//关闭登录页面
             createMainWindow()//打开业务主页面
         }
 

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
+	"go.mongodb.org/mongo-driver/bson"
+	"team_fighter_go/common"
+	"team_fighter_go/db"
 )
 
 type UserController struct {
@@ -21,29 +24,35 @@ func (self *UserController) Test() {
 
 func (self *UserController) Login() {
 	defer self.ServeJSON()
+
 	jsonByte := self.Ctx.Input.RequestBody
-	logs.Info("Method [Login] RequestBody::", string(jsonByte))
-	requestObject := make(map[string]interface{})
-	// JSON 处理
-	err_JsonUmarshal := json.Unmarshal(jsonByte, &requestObject)
-	if err_JsonUmarshal != nil {
+	try_err := common.Try(func() {
+
+		requestObject := make(map[string]interface{})
+		// JSON 处理
+		err_JsonUmarshal := json.Unmarshal(jsonByte, &requestObject)
+		common.ErrorHandler(err_JsonUmarshal)
+		// logic...
+		userid := requestObject["userid"].(string)
+		password := requestObject["password"].(string)
+		
+		collection, ctx := db.ObtainMongoCollection("htjy")
+		count, err_countDoc := collection.CountDocuments(ctx, bson.D{{"userid", userid}, {"password", password}})
+		common.ErrorHandler(err_countDoc)
+
+		result := make(map[string]interface{})
+		result["count"] = count
+		self.Data["json"] = httpResponse{
+			Success: true,
+			Data:    result,
+		}
+	})
+	// 错误处理
+	if try_err != nil {
 		self.Data["json"] = httpResponse{
 			Success: false,
-			Msg:     fmt.Sprintf("解析json发生错误::%s,%s", err_JsonUmarshal, string(jsonByte)),
+			Msg:     fmt.Sprintf("发生错误::%s", try_err),
 		}
-		logs.Error(fmt.Sprintf("%+v", self.Data["json"]))
-		return
+		logs.Error(fmt.Sprintf("发生错误::%s - input::%+v", try_err, string(jsonByte)))
 	}
-
-	// logic...
-
-	responseObject := make(map[string]interface{})
-	responseObject["result_string"] = "ok"
-	responseObject["result_int"] = 123
-
-	self.Data["json"] = httpResponse{
-		Success: true,
-		Data:    responseObject,
-	}
-	return
 }

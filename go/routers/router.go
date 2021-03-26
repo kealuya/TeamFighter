@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 	"github.com/goburrow/cache"
 	. "team_fighter_go/controllers"
 	"time"
@@ -43,12 +45,18 @@ func init() {
 	)
 
 	//过滤器-传入值记录
-	//beego.InsertFilter("/v1/s/send_msg", beego.BeforeExec, filter1)
+	beego.InsertFilter("*", beego.BeforeExec, filter_log)
 	//过滤器-传入值记录
 	//beego.InsertFilter("/v1/s/add_sms_template", beego.BeforeExec, filter2)
 
 }
-
+func filter_log(context *context.Context) {
+	logs.Info(fmt.Sprintf("FromHost:[%s] - FromIp:[%s] - RequestURI:[%s] - RequestBody::%s",
+		context.Input.Host(),
+		context.Input.IP(),
+		context.Request.RequestURI,
+		string(context.Input.RequestBody)))
+}
 func makeResultResponse(s bool, m string) string {
 	rr := ResultResponse{
 		Success: s,
