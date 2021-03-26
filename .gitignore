@@ -111,3 +111,4 @@ package-lock.json
 .svn
 .DS_Store
 /go/conf/my.yaml
+/config
