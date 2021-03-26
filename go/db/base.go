@@ -25,7 +25,3 @@ func NewHandlerDb() *xorm.Engine {
 	})
 	return dbEngine
 }
-
-
-
-

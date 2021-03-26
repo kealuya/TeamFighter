@@ -37,7 +37,6 @@ type SendState struct {
 	Success     bool   `json:"success"`
 }
 
-
 type TemplateState struct {
 	OrderId         string `json:"order_id"`
 	Reason          string `json:"reason"`

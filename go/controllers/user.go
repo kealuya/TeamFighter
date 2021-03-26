@@ -35,7 +35,7 @@ func (self *UserController) Login() {
 		// logic...
 		userid := requestObject["userid"].(string)
 		password := requestObject["password"].(string)
-		
+
 		collection, ctx := db.ObtainMongoCollection("htjy")
 		count, err_countDoc := collection.CountDocuments(ctx, bson.D{{"userid", userid}, {"password", password}})
 		common.ErrorHandler(err_countDoc)

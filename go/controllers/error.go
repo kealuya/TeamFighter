@@ -24,8 +24,3 @@ func (c *ErrorController) Error404() {
 	c.ServeJSON()
 }
 
-func (c *ErrorController) ErrorSelfError() {
-	errMsg := c.GetSession("self_error")
-	c.Data["error_msg"] = errMsg
-	c.TplName = "error.html"
-}
