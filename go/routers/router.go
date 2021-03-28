@@ -27,10 +27,13 @@ func init() {
 				beego.NSRouter("/testPost", &TestController{}, "Post:TestPost"),
 			),
 			//http://szht.natapp1.cc/v1/r/state_receive
-			/*beego.NSNamespace("/r", //receive
-				beego.NSRouter("/state_receive", &StateController{}, "post:StateReceive"),
+			beego.NSNamespace("/r", //receive
+				/*beego.NSRouter("/state_receive", &StateController{}, "post:StateReceive"),*/
 				beego.NSRouter("/template_receive", &StateController{}, "post:TemplateReceive"),
-			),*/
+			),
+			beego.NSNamespace("/s",
+				beego.NSRouter("/share", &ShareController{}, "post:TestShare"),
+			),
 		)
 	//注册 namespace
 	beego.AddNamespace(namespace)
