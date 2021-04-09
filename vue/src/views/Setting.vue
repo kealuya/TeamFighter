@@ -35,6 +35,11 @@
 
     <van-field v-model="profile.id" label="文本" placeholder="请输入用户名"/>
 
+    <van-row type="flex" justify="end">
+      <van-col span="6">
+        <van-button @click="logout" round type="primary">退出登录</van-button>
+      </van-col>
+    </van-row>
 
   </div>
 
@@ -42,7 +47,7 @@
 
 <script>
 import {getCurrentInstance} from "vue";
-import {Cell, Col, Grid, GridItem, Popover, Row, Field, Tag} from "vant";
+import {Cell, Col, Grid, GridItem, Popover, Row, Field, Tag, Button} from "vant";
 import {ref} from 'vue';
 import utils from "@/utils/common";
 
@@ -51,6 +56,7 @@ export default {
   components: {
     [Cell.name]: Cell,
     [Row.name]: Row,
+    [Button.name]: Button,
     [Col.name]: Col,
     [Grid.name]: Grid,
     [GridItem.name]: GridItem,
@@ -71,6 +77,15 @@ export default {
     changeAvatar: function (i) {
       this.showPopover = false;
       this.profile.avatar = i
+    },
+    logout: function () {
+      utils.ipcAccess("store", {
+        method: [utils.storeMethod.del],
+        payload: [utils.storeKey.userInfo]
+      }).then(() => {
+        localStorage.removeItem("userInfo")
+        utils.ipcAccess("operate", {operate: "logout"})
+      })
     }
   },
 

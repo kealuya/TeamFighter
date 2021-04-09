@@ -18,11 +18,15 @@ func init() {
 	namespace :=
 		beego.NewNamespace("/v1",
 
-			beego.NSNamespace("/b", //base处理
+			beego.NSNamespace("/u", //用户、设置等相关功能
 				beego.NSRouter("/login", &UserController{}, "Post:Login"),
+				beego.NSRouter("/get_user_avatar", &UserController{}, "Post:GetUserAvatar"),
 			),
 
-			beego.NSNamespace("/t", //test
+			beego.NSNamespace("/t", //任务相关
+				beego.NSRouter("/get_task_list", &TaskController{}, "Post:GetTaskList"),
+
+				//测试
 				beego.NSRouter("/test", &TestController{}, "get:Test"),
 				beego.NSRouter("/testPost", &TestController{}, "Post:TestPost"),
 			),

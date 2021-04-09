@@ -98,6 +98,11 @@ let utils = {
     picMsgMainLogo: picMsgMainLogo,
     picMission: picMission,
     // kv存储对应key值，防止key值写错
+    /*🎉*/storeMethod: {
+        get: "get",
+        put: "put",
+        del: "del",
+    },
     /*🎉*/storeKey: {
         userInfo: "userInfo",
     },

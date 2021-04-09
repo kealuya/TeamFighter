@@ -76,10 +76,11 @@ export default {
       channel: "htjy",
     }
   },
-  created() {
 
-    utils.ipcAccess("store", {
-      method: "get",
+  async beforeCreate() {
+
+    await utils.ipcAccess("store", {
+      method: [utils.storeMethod.get],
       payload: [utils.storeKey.userInfo]
     }).then(result => {
       if (result != null) {
@@ -97,17 +98,23 @@ export default {
       }
 
       utils.ipcAccess("http", {
-        url: utils.httpBaseUrl + "b/login",
+        url: utils.httpBaseUrl + "u/login",
         method: "post",
         parameter: {userid: this.userid, password: this.password,}
       }).then(ro => {
         if (!ro.success) {
           this.msg = ro.msg.replace("\r").replace("\n")
         } else {
-          if (ro.data.count !== 1) {
+          if (JSON.stringify(ro.data) === "{}") {
             this.msg = "工号或密码输入不正确"
           } else {
-            utils.ipcAccess("operate", {operate: "login"})
+            utils.ipcAccess("store", {
+              method: [utils.storeMethod.put],
+              payload: [utils.storeKey.userInfo, ro.data]
+            }).then(() => {
+              localStorage.setItem("userInfo", JSON.stringify(ro.data))//localstorage里只能存string
+              utils.ipcAccess("operate", {operate: "login"})
+            })
           }
         }
       })

@@ -16,15 +16,34 @@ let hook = function () {
     // 所有方法必须异步返回，不能同步，不然可能发生主线程阻塞
     console.log('hook_handler init')
 
-    // getVersion 获取程序版本 来自package.json
-    ipcMain.on("get_version", (event, arg) => {
+    /*
+     getVersion 获取程序版本 来自package.json
+     */
+    ipcMain.on("get_version", ipc_get_version)
+
+    function ipc_get_version(event, arg) {
         event.sender.send('get_version_reply', app.getVersion());
-    })
+    }
 
-    // 扩展功能
-    ipcMain.on("expand", (event, arg) => {
-        console.log(arg)
+    /*
+     log记录
+     */
+    ipcMain.on("logging", ipc_logging)
 
+    function ipc_logging(event, arg) {
+        let logType = arg.logType
+        let logContent = JSON.stringify(arg.logContent)
+
+        log[logType](logContent);
+    }
+
+    /*
+     扩展功能
+     */
+    ipcMain.on("expand", ipc_expand)
+
+    function ipc_expand(event, arg) {
+        //todo 追加log
         const win = new BrowserWindow({
             width: 400, height: 750,
             title: "浩天差旅统计分析",
@@ -39,11 +58,15 @@ let hook = function () {
 
 
         event.sender.send('expand_reply', app.getVersion());
-    })
+    }
 
 
-    // 消息通知
-    ipcMain.on("notify", (event, arg) => {
+    /*
+     消息通知
+     */
+    ipcMain.on("notify", ipc_notify)
+
+    function ipc_notify(event, arg) {
         // 解决electron console里提示安全warning的问题
         process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
         const {width, height} = screen.getPrimaryDisplay().workAreaSize
@@ -79,26 +102,30 @@ let hook = function () {
         });
         // win.webContents.openDevTools();
 
-    })
+    }
 
     /*
      * 存储操作
      */
-    ipcMain.on("store", (event, arg) => {
+    ipcMain.on("store", ipc_store)
 
+    function ipc_store(event, arg) {
         let method = arg.method;
         let payload = arg.payload;
         store[method](...payload).then(val => {
             event.sender.send('store_reply', val);
         }).catch(err => {
             event.sender.send('store_reply', null);
-            log.error("store err::", err, "store_method::", method, "store_payload::", payload)
+            log.error("store err::", err, "store_method::", method, "store_payload::", JSON.stringify(payload))
         })
-    })
+    }
 
+    /*
+     * 操作处理
+     */
+    ipcMain.on("operate", ipc_operate)
 
-    // 操作处理
-    ipcMain.on("operate", (event, arg) => {
+    function ipc_operate(event, arg) {
         let operate = arg.operate;
         let parameter = arg.parameter;
 
@@ -112,6 +139,11 @@ let hook = function () {
             loginWindow.close()//关闭登录页面
             createMainWindow()//打开业务主页面
         }
+        //退出登录
+        let func_logout = function () {
+            mainWindow.close()//关闭业务页面
+            createLoginWindow()//打开登录主页面
+        }
 
         switch (operate) {
             case "quit"://程序退出
@@ -120,15 +152,20 @@ let hook = function () {
             case "login"://程序退出
                 func_login()
                 break;
+            case "logout":
+                func_logout()
+                break;
         }
         // event.sender.send('notify_reply', {"msg": "通知发送成功", "success": true});
-    })
+    }
 
 
     // 网络请求
-    ipcMain.on("http", (event, arg) => {
+    ipcMain.on("http", ipc_http)
+
+    function ipc_http(event, arg) {
         let timeStamp = Date.now() // 用来记录对应各请求的request和response
-        log.info("stamp::", timeStamp, "http request::", arg,)
+        log.info("stamp::", timeStamp, "http request::", JSON.stringify(arg),)
         let url = arg.url;
         let method = arg.method;
         let parameter = arg.parameter;
@@ -143,7 +180,7 @@ let hook = function () {
         };
         axios(config)
             .then(function (response) {
-                log.info("stamp::", timeStamp, "http response::", response.data)
+                log.info("stamp::", timeStamp, "http response::", JSON.stringify(response.data))
                 event.sender.send('http_reply', response.data);
             })
             .catch(function (error) {
@@ -152,7 +189,7 @@ let hook = function () {
                 ro.msg = error.toString()
                 event.sender.send('http_reply', ro);
             });
-    })
+    }
 
 
     // 业务主页面

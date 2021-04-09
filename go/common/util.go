@@ -90,6 +90,7 @@ func Base64ToString(data string) string {
 func Try(fn func()) (err error) {
 	defer func() {
 		if val := recover(); val != nil {
+			logs.Error(string(debug.Stack()))
 			var ok bool
 			err, ok = val.(error)
 			if !ok {
@@ -102,4 +103,21 @@ func Try(fn func()) (err error) {
 	fn()
 
 	return err
+}
+
+/*
+    拷贝map
+ */
+func CopyMap(m map[string]interface{}) map[string]interface{} {
+	cp := make(map[string]interface{})
+	for k, v := range m {
+		vm, ok := v.(map[string]interface{})
+		if ok {
+			cp[k] = CopyMap(vm)
+		} else {
+			cp[k] = v
+		}
+	}
+
+	return cp
 }

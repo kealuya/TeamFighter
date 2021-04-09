@@ -20,10 +20,10 @@
               <div style=" display: flex;flex-direction: column;justify-content: center;align-items: center">
                 <!--头像图片-->
                 <div style="width: 45px;height:45px;" @click="showFromName(item)">
-                  <img :src="getAvatar(item.avatar)" style="width: 45px;height:45px;">
+                  <img :src="getAvatar(item.displayAvatar)" style="width: 45px;height:45px;">
                 </div>
                 <!--头像人名-->
-                <div style="font-size: 10px">六三</div>
+                <div style="font-size: 10px">{{ item.displayName }}</div>
               </div>
               <!--右侧代办任务部分-->
               <div style="flex: 21; height: 90%;width: 80%;font-size: 14px;display: flex;flex-direction: column; justify-content: space-between;
@@ -172,6 +172,8 @@ export default {
         {userId: "1131", userName: "智能柜5"},
       ],
       picMission: utils.picMission,
+
+
     }
   },
   beforeUnmount() {
@@ -196,7 +198,8 @@ export default {
   methods: {
     // 获取头像图片
     getAvatar: function (a) {
-      return utils.avatars[a]
+      console.log(a)
+      return utils.avatars[parseInt(a)]
     },
     todoUserSelect: function (user) {
       this.todo_user_val = user.userName
@@ -324,63 +327,152 @@ export default {
   computed: {},
 
   setup() {
+    // setup方法返回值初始化
     const state = reactive({
       list: [],
       loading: false,
       finished: false,
       refreshing: false,
     });
-
+    // 当前页初始化
+    let currentPage = 0;
     const onLoad = () => {
-      setTimeout(() => {
-        if (state.refreshing) {
-          state.list = [];
-          state.refreshing = false;
-        }
-        // 数据部分
-        for (let i = 0; i < 8; i++) {
-          state.list.push({
-            todo: "修改作业" + i,
-            fromName: "自",
-            fromId: "112345",
-            stars: 2,
-            state: "wait",//waiting confirmed done
-            info: "",
-            avatar: 2,
-            progress: 30,
-            direction: "",
-          });
-        }
+      if (state.refreshing) {
+        state.list = [];
+        state.refreshing = false;
+        currentPage = 1
+      } else {
+        currentPage += 1
+      }
 
-        state.list.push({
-          todo: "必须今天下午之前把文档打印好2222111114444",
-          fromName: "张三个",
-          fromId: "112342",
-          stars: 1,
-          state: "wait",//waiting confirmed done
-          info: "",
-          avatar: 12,
-          progress: 50,
-          direction: "out",
-        });
-        state.list.push({
-          todo: "春眠不觉晓，处处闻啼鸟，夜处处闻啼鸟，夜来风雨声，花落知多少",
-          fromName: "李四喜",
-          fromId: "112349",
-          stars: 1,
-          state: "wait",//waiting confirmed done
-          info: "春晓，王安石",
-          avatar: 6,
-          progress: 90,
-          direction: "in",
-        });
+      // 获取用户信息及任务列表
+      let ui = JSON.parse(localStorage.getItem("userInfo"))//localStorage取得对象需要转换成json使用
+      utils.ipcAccess("http", {
+        url: utils.httpBaseUrl + "t/get_task_list",
+        method: "post",
+        parameter: {userid: ui.userid, page: currentPage, query: ""}
+      }).then(ro => {
+            // 不正的场合
+            if (!ro.success) {
+              //logging
+              utils.ipcAccess("logging", {logType: "error", logContent: ro})
+              return
+            }
+            // 正常的场合
+            if (ro.success) {
+              let count = ro.data.count;
+              let tasks = ro.data.tasks;
 
-        state.loading = false;
+              // 获取用户对应头像
+              let userids = [];
+              tasks.forEach(function (val) {
+                let toId = val.toId;
+                let fromId = val.fromId;
+                let isTwo = function (v) {
+                  if (userids.indexOf(v) < 0) {
+                    userids.push(v)
+                  }
+                }
+                isTwo(toId)
+                isTwo(fromId)
+              })
+              utils.ipcAccess("http", {
+                url: utils.httpBaseUrl + "u/get_user_avatar",
+                method: "post",
+                parameter: {userids: userids}
+              }).then(ro => {
+                // 不正的场合
+                if (!ro.success) {
+                  //logging
+                  utils.ipcAccess("logging", {logType: "error", logContent: ro})
+                  return
+                }
+                // 正常的场合
+                if (ro.success) {
+                  let getAvatarObj = ro.data
+                  let myTasks = []
+                  tasks.forEach(function (item) {
+                    if (item.direction === "none") {
+                      // 自己的场合
+                      item.displayAvatar = getAvatarObj[item.fromId]
+                      item.displayName = item.fromName
+                    } else if (item.direction === "in") {
+                      // 别人要求我的场合
+                      item.displayAvatar = getAvatarObj[item.fromId]
+                      item.displayName = item.fromName
+                    } else if (item.direction === "out") {
+                      // 我要求别人的
+                      item.displayAvatar = getAvatarObj[item.toId]
+                      item.displayName = item.toName
+                    } else {
+                      // 我就不该存在
+                      console.log("我就不该存在")
+                    }
+                    myTasks.push(item)
+                  })
+                  tasks = myTasks
+                  // 数据部分
+                  state.list = state.list.concat(tasks)
+                  state.loading = false;
+                  if (state.list.length === count) {
+                    state.finished = true;
+                  }
+                }
+              })
+            }
+          }
+      )
 
-        if (state.list.length >= 40) {
-          state.finished = true;
-        }
-      }, 1000);
+
+      // setTimeout(() => {
+      //   if (state.refreshing) {
+      //     state.list = [];
+      //     state.refreshing = false;
+      //   }
+      //   // 数据部分
+      //   for (let i = 0; i < 8; i++) {
+      //     state.list.push({
+      //       todo: "修改作业" + i,
+      //       fromName: "自",
+      //       fromId: "112345",
+      //       stars: 2,
+      //       state: "wait",//waiting confirmed done
+      //       info: "",
+      //       avatar: 2,
+      //       progress: 30,
+      //       direction: "",
+      //     });
+      //   }
+      //
+      //   state.list.push({
+      //     todo: "必须今天下午之前把文档打印好2222111114444",
+      //     fromName: "张三个",
+      //     fromId: "112342",
+      //     stars: 1,
+      //     state: "wait",//waiting confirmed done
+      //     info: "",
+      //     avatar: 12,
+      //     progress: 50,
+      //     direction: "out",
+      //   });
+      //   state.list.push({
+      //     todo: "春眠不觉晓，处处闻啼鸟，夜处处闻啼鸟，夜来风雨声，花落知多少",
+      //     fromName: "李四喜",
+      //     fromId: "112349",
+      //     stars: 1,
+      //     state: "wait",//waiting confirmed done
+      //     info: "春晓，王安石",
+      //     avatar: 6,
+      //     progress: 90,
+      //     direction: "in",
+      //   });
+      //
+      //   state.loading = false;
+      //
+      //   if (state.list.length >= 40) {
+      //     state.finished = true;
+      //   }
+      // }, 1000);
     };
 
     const onRefresh = () => {
@@ -399,6 +491,7 @@ export default {
       state,
       onLoad,
       onRefresh,
+      currentPage,
     };
   },
 
