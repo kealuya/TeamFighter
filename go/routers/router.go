@@ -25,6 +25,7 @@ func init() {
 
 			beego.NSNamespace("/t", //任务相关
 				beego.NSRouter("/get_task_list", &TaskController{}, "Post:GetTaskList"),
+				beego.NSRouter("/get_record_list", &RecordController{}, "Post:GetRecordList"),
 
 				//测试
 				beego.NSRouter("/test", &TestController{}, "get:Test"),
