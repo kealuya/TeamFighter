@@ -47,7 +47,7 @@
                 </div>
                 <!--任务属性-->
                 <div style="text-align: end">
-                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">Bug</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">{{ item.todoType }}</van-tag>
                   <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">2天</van-tag>
                   <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">详情</van-tag>
                   <van-tag style="margin-left: 10px;font-size: 10px" type="primary">待确认</van-tag>

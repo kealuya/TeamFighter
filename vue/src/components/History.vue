@@ -13,8 +13,8 @@
 
       <template v-for="item in state.list" :key="item">
         <van-step style=" font-size: 14px;text-align: start">
-          <div>【张三】需要【你】交作业</div>
-          <div>2021-02-14 12:31:12</div>
+          <div>【{{ item.fromName }}】需要【{{item.toName}}】交作业</div>
+          <div>{{ item.todoType }}</div>
         </van-step>
       </template>
 
@@ -29,6 +29,7 @@
 import {Icon, Step, Steps, List, Tabs} from 'vant';
 import TaskList from "@/components/TaskList";
 import {reactive} from "vue";
+import utils from "@/utils/common";
 
 export default {
   name: "History",
@@ -38,7 +39,13 @@ export default {
     [Steps.name]: Steps,
     [List.name]: List,
   },
+  data() {
+    return {}
+  },
+  methods: {},
+  created() {
 
+  },
   setup() {
 
     const state = reactive({
@@ -48,27 +55,101 @@ export default {
       refreshing: false,
     });
 
+    //当前页初始化
+    let currentPage = 0;
     const onLoad = () => {
-      setTimeout(() => {
-        if (state.refreshing) {
-          state.list = [];
-          state.refreshing = false;
+      /*  setTimeout(() => {
+
+        }, 1000);*/
+      if (state.refreshing) {
+        state.list = [];
+        state.refreshing = false;
+        currentPage = 1;
+      } else {
+        currentPage += 1;
+      }
+      // 数据部分
+      /*for (let i = 0; i < 20; i++) {
+        state.list.push({
+          thing: "修改作业" + i,
+          date: "2020-01-12 12:33:43",
+        });
+      }*/
+      let ui = localStorage.getItem("userInfo");
+      utils.ipcAccess("http", {
+        url: utils.httpBaseUrl + "t/get_record_list",
+        method: "post",
+        parameter: {userid: ui.userid, page: currentPage, query: ""}
+      }).then(response => {
+        if (response.success){
+          let count = response.data.count;
+          let tasks = response.data.tasks;
+          // 获取用户对应头像
+          let userids = [];
+          tasks.forEach(function (val) {
+            let toId = val.toId;
+            let fromId = val.fromId;
+            let isTwo = function (v) {
+              if (userids.indexOf(v) < 0) {
+                userids.push(v)
+              }
+            }
+            isTwo(toId)
+            isTwo(fromId)
+          })
+
+          utils.ipcAccess("http", {
+            url: utils.httpBaseUrl + "u/get_user_avatar",
+            method: "post",
+            parameter: {userids: userids}
+          }).then(ro => {
+            // 不正的场合
+            if (!ro.success) {
+              //logging
+              utils.ipcAccess("logging", {logType: "error", logContent: ro})
+              return
+            }
+            // 正常的场合
+            if (ro.success) {
+              let getAvatarObj = ro.data
+              let myTasks = []
+              tasks.forEach(function (item) {
+                if (item.direction === "none") {
+                  // 自己的场合
+                  item.displayAvatar = getAvatarObj[item.fromId]
+                  item.displayName = item.fromName
+                } else if (item.direction === "in") {
+                  // 别人要求我的场合
+                  item.displayAvatar = getAvatarObj[item.fromId]
+                  item.displayName = item.fromName
+                } else if (item.direction === "out") {
+                  // 我要求别人的
+                  item.displayAvatar = getAvatarObj[item.toId]
+                  item.displayName = item.toName
+                } else {
+                  // 我就不该存在
+                  console.log("我就不该存在")
+                }
+                myTasks.push(item)
+              })
+              tasks = myTasks
+              // 数据部分
+              state.list = state.list.concat(tasks)
+              state.loading = false;
+              if (state.list.length === count) {
+                state.finished = true;
+              }
+            }
+          })
+        }else {
+          //logging
+          utils.ipcAccess("logging", {logType: "error", logContent: response})
+          return
         }
-        // 数据部分
-        for (let i = 0; i < 20; i++) {
-          state.list.push({
-            thing: "修改作业" + i,
-            date: "2020-01-12 12:33:43",
-          });
-        }
+      })
 
 
-        state.loading = false;
 
-        if (state.list.length >= 140) {
-          state.finished = true;
-        }
-      }, 1000);
     };
 
     const onRefresh = () => {
@@ -86,6 +167,7 @@ export default {
       state,
       onLoad,
       onRefresh,
+      currentPage
     };
   },
 
