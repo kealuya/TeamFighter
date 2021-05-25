@@ -7,8 +7,11 @@ import (
 	"github.com/astaxie/beego/logs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"strings"
 	"team_fighter_go/common"
 	"team_fighter_go/db"
+	"time"
 )
 
 type TaskController struct {
@@ -147,6 +150,238 @@ func (self *TaskController) GetTaskList() {
 		self.Data["json"] = httpResponse{
 			Success: true,
 			Data:    returnData,
+		}
+	})
+	// 错误处理
+	if try_err != nil {
+		self.Data["json"] = httpResponse{
+			Success: false,
+			Msg:     fmt.Sprintf("发生错误::%s", try_err),
+		}
+		logs.Error(fmt.Sprintf("发生错误::%s - input::%+v", try_err, string(jsonByte)))
+
+	}
+}
+
+func (self *TaskController) GetUserList() {
+	defer self.ServeJSON()
+
+	jsonByte := self.Ctx.Input.RequestBody
+	try_err := common.Try(func() {
+
+		requestObject := make(map[string]interface{})
+		// JSON 处理
+		err_JsonUmarshal := json.Unmarshal(jsonByte, &requestObject)
+		common.ErrorHandler(err_JsonUmarshal)
+		// logic...
+		//创建返回数据
+		returnData := make(map[string]interface{})
+		// task总数获取
+		collection, ctx := db.ObtainMongoCollection("htjy")
+		cur_FindUserList, err_FindUserList := collection.Find(ctx,
+			bson.D{},
+			options.Find().SetProjection(bson.D{{"_id", 0},
+				{"userid", 1},
+				{"username", 1},
+				{"avatar", 1},
+				{"level", 1},
+			}),
+		)
+		if err_FindUserList != nil {
+			common.ErrorHandler(err_FindUserList)
+		}
+		userList := make([]map[string]interface{}, 0)
+		for cur_FindUserList.Next(ctx) {
+			userMap := make(map[string]interface{})
+			cur_FindUserList.Decode(&userMap)
+			userList = append(userList, userMap)
+		}
+		returnData["userList"] = userList
+
+		// 返回 tasks数组和 count总数
+		self.Data["json"] = httpResponse{
+			Success: true,
+			Data:    returnData,
+		}
+	})
+	// 错误处理
+	if try_err != nil {
+		self.Data["json"] = httpResponse{
+			Success: false,
+			Msg:     fmt.Sprintf("发生错误::%s", try_err),
+		}
+		logs.Error(fmt.Sprintf("发生错误::%s - input::%+v", try_err, string(jsonByte)))
+	}
+}
+
+func (self *TaskController) SendTaskToUser() {
+	defer self.ServeJSON()
+	/*
+	   //taskNo: "000010",  日期计算吧
+	   todo: "测试事项3",   题目
+	   todoType: "需求",
+	   direction: "in",
+	   //progress: NumberInt("75"),
+	   fromName: "王鑫钰",
+	   fromId: "1587",
+	   toName: "任浩",
+	   toId: "1209",
+	   stars: NumberInt("2"),
+	   //state: "wait",
+	   info: "测试事项\"2的详情",
+	   //createTime: ISODate("2021-04-16T08:47:33.085Z"),
+	*/
+	jsonByte := self.Ctx.Input.RequestBody
+	try_err := common.Try(func() {
+
+		requestObject := make(map[string]interface{})
+		// JSON 处理
+		err_JsonUmarshal := json.Unmarshal(jsonByte, &requestObject)
+		common.ErrorHandler(err_JsonUmarshal)
+		// logic...
+		// 补充
+		// taskNo
+		// progress
+		// state
+		// createTime
+		//
+		requestObject["taskNo"] = common.FormatDate(time.Now(), common.YYYYMMDDHHMMSS)
+		requestObject["progress"] = 0
+		requestObject["state"] = "wait"
+		requestObject["createTime"] = time.Now()
+		direction := "out"
+		if requestObject["fromId"] == requestObject["toId"] {
+			direction = "none"
+		}
+		requestObject["direction"] = direction
+
+		bsonM := bson.M{}
+		for k, v := range requestObject {
+			bsonM[k] = v
+		}
+
+		//创建返回数据
+		returnData := make(map[string]interface{})
+		// task总数获取
+		collection, ctx := db.ObtainMongoCollection("htjy")
+		// 如果是发送其他人任务
+		if bsonM["direction"] == "out" {
+			// toUser更新
+			bsonM["direction"] = "in"
+			_, err_UpdateOne := collection.UpdateOne(ctx,
+				bson.D{{"userid", requestObject["toId"]}},
+				bson.D{{"$push", bson.D{{"tasks",
+					bsonM}}}},
+				options.Update())
+			common.ErrorHandler(err_UpdateOne)
+			bsonM["direction"] = "out"
+		}
+		// fromUser更新
+		ur, err_UpdateOne := collection.UpdateOne(ctx,
+			bson.D{{"userid", requestObject["fromId"]}},
+			bson.D{{"$push", bson.D{{"tasks",
+				bsonM}}}},
+			options.Update())
+		common.ErrorHandler(err_UpdateOne)
+
+		returnData["modifiedCount"] = ur.ModifiedCount
+
+		// 返回 tasks数组和 count总数
+		self.Data["json"] = httpResponse{
+			Success: true,
+			Data:    returnData,
+		}
+	})
+	// 错误处理
+	if try_err != nil {
+		self.Data["json"] = httpResponse{
+			Success: false,
+			Msg:     fmt.Sprintf("发生错误::%s", try_err),
+		}
+		logs.Error(fmt.Sprintf("发生错误::%s - input::%+v", try_err, string(jsonByte)))
+
+	}
+}
+func (self *TaskController) UpdateTaskInfo() {
+	defer self.ServeJSON()
+	/*
+	   taskNo: "000010",  日期计算吧
+	   todo: "测试事项3",   题目
+	   todoType: "需求",
+	   direction: "in",
+	   progress: NumberInt("75"),
+	   fromName: "王鑫钰",
+	   fromId: "1587",
+	   toName: "任浩",
+	   toId: "1209",
+	   stars: NumberInt("2"),
+	   state: "wait",
+	   info: "测试事项\"2的详情",
+	   createTime: ISODate("2021-04-16T08:47:33.085Z"),
+	*/
+	jsonByte := self.Ctx.Input.RequestBody
+	try_err := common.Try(func() {
+
+		requestObject := make(map[string]interface{})
+		// JSON 处理
+		err_JsonUmarshal := json.Unmarshal(jsonByte, &requestObject)
+		common.ErrorHandler(err_JsonUmarshal)
+		// logic...
+		// 补充
+		// taskNo
+		// progress
+		// state
+		// createTime
+		//
+		//taskNo := requestObject["taskNo"]
+
+		//delete(requestObject, "userid")
+		bsonM := bson.M{}
+		for k, v := range requestObject {
+			if !strings.Contains(k, "display") {
+				if (k == "createTime" || k == "completeTime") && v != "" {
+					t, err_timeParse := time.Parse("2006-01-02 15:04:05", v.(string))
+					common.ErrorHandler(err_timeParse, "时间转换错误 %v")
+					bsonM[k] = t
+				} else {
+					bsonM[k] = v
+				}
+			}
+		}
+		// 根据用户所选进度，匹配对应任务状态
+		if bsonM["progress"].(float64) == 100 {
+			bsonM["state"] = "done"
+			bsonM["completeTime"] = time.Now()
+		} else if bsonM["progress"].(float64) != 0 {
+			bsonM["state"] = "confirmed"
+		}
+
+		fmt.Println(bsonM)
+		//创建返回数据
+		// task总数获取
+		collection, ctx := db.ObtainMongoCollection("htjy")
+		// 如果是发送其他人任务
+		if bsonM["direction"] == "out" {
+			// toUser更新
+			bsonM["direction"] = "in"
+			_, err_UpdateOne := collection.UpdateOne(ctx,
+				bson.D{{"userid", bsonM["toId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
+				bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
+				options.Update())
+			common.ErrorHandler(err_UpdateOne)
+			bsonM["direction"] = "out"
+		}
+		// fromUser更新
+		_, err_UpdateOne := collection.UpdateOne(ctx,
+			bson.D{{"userid", bsonM["fromId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
+			bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
+			options.Update())
+		common.ErrorHandler(err_UpdateOne)
+
+		// 返回 tasks数组和 count总数
+		self.Data["json"] = httpResponse{
+			Success: true,
+			Data:    bsonM,
 		}
 	})
 	// 错误处理

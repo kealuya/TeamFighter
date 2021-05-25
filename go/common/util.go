@@ -94,8 +94,8 @@ func Try(fn func()) (err error) {
 			var ok bool
 			err, ok = val.(error)
 			if !ok {
-				logs.Error("common.Try方法中错误转换错误::", val)
-				err = errors.New("common.Try方法中错误转换错误")
+				logs.Error("common.Try方法中错误::", val)
+				err = errors.New(fmt.Sprintf("%s", val))
 			}
 		}
 	}()
@@ -106,8 +106,8 @@ func Try(fn func()) (err error) {
 }
 
 /*
-    拷贝map
- */
+   拷贝map
+*/
 func CopyMap(m map[string]interface{}) map[string]interface{} {
 	cp := make(map[string]interface{})
 	for k, v := range m {

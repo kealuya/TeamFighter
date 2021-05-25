@@ -15,7 +15,7 @@ import (
 
 func main() {
 	//db.ObtainMongoClient()
-	//test222()
+	//test333()
 	beego.ErrorController(&controllers.ErrorController{}) //错误页面处理
 	beego.Run()
 
@@ -180,4 +180,48 @@ func test222() {
 		cur.Decode(&d)
 		fmt.Println(d)
 	}
+}
+
+func test333() {
+	//userids := []string{"1209", "1587"}
+	collection, ctx := db.ObtainMongoCollection("htjy")
+
+	ur, err_UpdateOne := collection.UpdateMany(ctx,
+		bson.D{{"userid", "1209"}, {"tasks.taskNo", "20210520202832"}},
+		bson.D{{"$set", bson.D{{"tasks.$.progress", 33}}}},
+		options.Update())
+
+	fmt.Println(err_UpdateOne)
+	//bson_d := make([]bson.D, 0)
+	//for _, v := range userids {
+	//	bson_d = append(bson_d, bson.D{
+	//		{"userid", v},
+	//	})
+	//
+	//}
+	//fmt.Println(bson_d)
+	//ur, err := collection.UpdateOne(ctx,
+	//	bson.D{{"userid", "1209"}},
+	//	bson.D{{"$push", bson.D{{"tasks",
+	//		bson.M{
+	//			"taskNo":       "123123123123",
+	//			"todo":         "测试事项123123123123",
+	//			"todoType":     "需求",
+	//			"direction":    "in",
+	//			"progress":     0,
+	//			"fromName":     "任浩",
+	//			"fromId":       "1209",
+	//			"toName":       "任浩",
+	//			"toId":         "1209",
+	//			"stars":        2,
+	//			"state":        "wait",
+	//			"info":         "测试事项123123123123测试事项123123123123测试事项123123123123",
+	//			"createTime":   time.Now(),
+	//			"completeTime": ""}}}}},
+	//	options.Update())
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//
+	fmt.Println(ur)
 }

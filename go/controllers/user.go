@@ -86,8 +86,51 @@ func (self *UserController) GetUserAvatar() {
 		for cur.Next(ctx) {
 			curMap := make(map[string]interface{})
 			cur.Decode(&curMap)
-			returnData[curMap["userid"].(string)] = curMap["avatar"].(string)
+			returnData[curMap["userid"].(string)] = curMap["avatar"]
 		}
+
+		self.Data["json"] = httpResponse{
+			Success: true,
+			Data:    returnData,
+		}
+	})
+	// 错误处理
+	if try_err != nil {
+		self.Data["json"] = httpResponse{
+			Success: false,
+			Msg:     fmt.Sprintf("发生错误::%s", try_err),
+		}
+		logs.Error(fmt.Sprintf("发生错误::%s - input::%+v", try_err, string(jsonByte)))
+	}
+}
+
+func (self *UserController) SetUserInfo() {
+	defer self.ServeJSON()
+
+	jsonByte := self.Ctx.Input.RequestBody
+	try_err := common.Try(func() {
+
+		requestObject := make(map[string]interface{})
+		// JSON 处理
+		err_JsonUmarshal := json.Unmarshal(jsonByte, &requestObject)
+		common.ErrorHandler(err_JsonUmarshal)
+		// logic...
+		userid := requestObject["userid"].(string)
+		delete(requestObject, "userid")
+		bsonD := bson.D{}
+		for k, v := range requestObject {
+			bsonD = append(bsonD, bson.E{k, v})
+		}
+
+		collection, ctx := db.ObtainMongoCollection("htjy")
+
+		ur, err_UpdateOne := collection.UpdateOne(ctx,
+			bson.D{{"userid", userid}},
+			bson.D{{"$set", bsonD}})
+
+		common.ErrorHandler(err_UpdateOne)
+		returnData := make(map[string]interface{})
+		returnData["modifiedCount"] = ur.ModifiedCount
 
 		self.Data["json"] = httpResponse{
 			Success: true,

@@ -21,10 +21,14 @@ func init() {
 			beego.NSNamespace("/u", //用户、设置等相关功能
 				beego.NSRouter("/login", &UserController{}, "Post:Login"),
 				beego.NSRouter("/get_user_avatar", &UserController{}, "Post:GetUserAvatar"),
+				beego.NSRouter("/set_user_info", &UserController{}, "Post:SetUserInfo"),
 			),
 
 			beego.NSNamespace("/t", //任务相关
 				beego.NSRouter("/get_task_list", &TaskController{}, "Post:GetTaskList"),
+				beego.NSRouter("/get_user_list", &TaskController{}, "Post:GetUserList"),
+				beego.NSRouter("/send_task_to_user", &TaskController{}, "Post:SendTaskToUser"),
+				beego.NSRouter("/update_task_info", &TaskController{}, "Post:UpdateTaskInfo"),
 				beego.NSRouter("/get_record_list", &RecordController{}, "Post:GetRecordList"),
 
 				//测试
