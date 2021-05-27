@@ -369,14 +369,38 @@ func (self *TaskController) UpdateTaskInfo() {
 				bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
 				options.Update())
 			common.ErrorHandler(err_UpdateOne)
+
 			bsonM["direction"] = "out"
+			// fromUser更新
+			_, err_UpdateOne2 := collection.UpdateOne(ctx,
+				bson.D{{"userid", bsonM["fromId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
+				bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
+				options.Update())
+			common.ErrorHandler(err_UpdateOne2)
+		} else if bsonM["direction"] == "in" {
+			// 如果是他人发送自己的任务
+			// toUser更新
+			_, err_UpdateOne := collection.UpdateOne(ctx,
+				bson.D{{"userid", bsonM["toId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
+				bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
+				options.Update())
+			common.ErrorHandler(err_UpdateOne)
+
+			// fromUser更新
+			bsonM["direction"] = "out"
+			_, err_UpdateOne2 := collection.UpdateOne(ctx,
+				bson.D{{"userid", bsonM["fromId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
+				bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
+				options.Update())
+			common.ErrorHandler(err_UpdateOne2)
+		} else {
+			// 如果bsonM["direction"] == "none"
+			_, err_UpdateOne := collection.UpdateOne(ctx,
+				bson.D{{"userid", bsonM["toId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
+				bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
+				options.Update())
+			common.ErrorHandler(err_UpdateOne)
 		}
-		// fromUser更新
-		_, err_UpdateOne := collection.UpdateOne(ctx,
-			bson.D{{"userid", bsonM["fromId"]}, {"tasks.taskNo", bsonM["taskNo"]}},
-			bson.D{{"$set", bson.D{{"tasks.$", bsonM}}}},
-			options.Update())
-		common.ErrorHandler(err_UpdateOne)
 
 		// 返回 tasks数组和 count总数
 		self.Data["json"] = httpResponse{
