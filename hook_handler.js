@@ -169,6 +169,7 @@ let hook = function () {
         let url = arg.url;
         let method = arg.method;
         let parameter = arg.parameter;
+        let onceId = arg.onceId
 
         let config = {
             method: method,
@@ -180,14 +181,14 @@ let hook = function () {
         };
         axios(config)
             .then(function (response) {
-                log.info("stamp::", timeStamp, "http response::", JSON.stringify(response.data))
-                event.sender.send('http_reply', response.data);
+                log.info("stamp::", timeStamp, "reply_channel::", 'http_reply' + onceId, "http response::", JSON.stringify(response.data))
+                event.sender.send('http_reply_' + onceId, response.data);
             })
             .catch(function (error) {
-                log.error("stamp::", timeStamp, "http response::", error)
+                log.error("stamp::", timeStamp, "reply_channel::", 'http_reply' + onceId, "http response::", error)
                 let ro = utils.getResponseObject()
                 ro.msg = error.toString()
-                event.sender.send('http_reply', ro);
+                event.sender.send('http_reply_' + onceId, ro);
             });
     }
 
