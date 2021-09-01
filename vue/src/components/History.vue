@@ -13,7 +13,7 @@
 
       <template v-for="item in state.list" :key="item">
         <van-step style=" font-size: 14px;text-align: start">
-          <div>【{{ item.fromName }}】需要【{{item.toName}}】交作业</div>
+          <div>【{{ item.fromName }}】需要【{{ item.toName }}】交作业</div>
           <div>{{ item.todoType }}</div>
         </van-step>
       </template>
@@ -30,6 +30,7 @@ import {Icon, Step, Steps, List, Tabs} from 'vant';
 import TaskList from "@/components/TaskList";
 import {reactive} from "vue";
 import utils from "@/utils/common";
+import {useStore} from "vuex";
 
 export default {
   name: "History",
@@ -75,27 +76,80 @@ export default {
           date: "2020-01-12 12:33:43",
         });
       }*/
-      let ui = JSON.parse(localStorage.getItem("userInfo"))//localStorage取得对象需要转换成json使用
+      let ui = getUserInfo()
       utils.ipcAccess("http", {
         url: utils.httpBaseUrl + "t/get_record_list",
         method: "post",
         parameter: {userid: ui.userid, page: currentPage, query: ""}
       }).then(response => {
-        if (response.success){
+        if (response.success) {
           let count = response.data.count;
           let tasks = response.data.tasks;
-          // 数据部分
-          state.list = state.list.concat(tasks)
-          state.loading = false;
-          if (state.list.length === count) {
-            state.finished = true;
-          }
-        }else {
+          // 获取用户对应头像
+          let userids = [];
+          tasks.forEach(function (val) {
+            let toId = val.toId;
+            let fromId = val.fromId;
+            let isTwo = function (v) {
+              if (userids.indexOf(v) < 0) {
+                userids.push(v)
+              }
+            }
+            isTwo(toId)
+            isTwo(fromId)
+          })
+
+          utils.ipcAccess("http", {
+            url: utils.httpBaseUrl + "u/get_user_avatar",
+            method: "post",
+            parameter: {userids: userids}
+          }).then(ro => {
+            // 不正的场合
+            if (!ro.success) {
+              //logging
+              utils.ipcAccess("logging", {logType: "error", logContent: ro})
+              return
+            }
+            // 正常的场合
+            if (ro.success) {
+              let getAvatarObj = ro.data
+              let myTasks = []
+              tasks.forEach(function (item) {
+                if (item.direction === "none") {
+                  // 自己的场合
+                  item.displayAvatar = getAvatarObj[item.fromId]
+                  item.displayName = item.fromName
+                } else if (item.direction === "in") {
+                  // 别人要求我的场合
+                  item.displayAvatar = getAvatarObj[item.fromId]
+                  item.displayName = item.fromName
+                } else if (item.direction === "out") {
+                  // 我要求别人的
+                  item.displayAvatar = getAvatarObj[item.toId]
+                  item.displayName = item.toName
+                } else {
+                  // 我就不该存在
+                  console.log("我就不该存在")
+                }
+                myTasks.push(item)
+              })
+              tasks = myTasks
+              // 数据部分
+              state.list = state.list.concat(tasks)
+              state.loading = false;
+              if (state.list.length === count) {
+                state.finished = true;
+              }
+            }
+          })
+        } else {
           //logging
           utils.ipcAccess("logging", {logType: "error", logContent: response})
           return
         }
       })
+
+
     };
 
     const onRefresh = () => {
@@ -109,10 +163,13 @@ export default {
       onLoad();
     };
 
+    const store = useStore()
+    const getUserInfo = () => store.state.sys.userInfo
     return {
       state,
       onLoad,
       onRefresh,
+      getUserInfo,
       currentPage
     };
   },

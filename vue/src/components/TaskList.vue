@@ -48,21 +48,27 @@
                 <!--任务属性-->
                 <div style="text-align: end">
                   <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">{{ item.todoType }}</van-tag>
-                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">2天</van-tag>
-                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">详情</van-tag>
-                  <van-tag style="margin-left: 10px;font-size: 10px" type="primary">待确认</van-tag>
+                  <van-tag style="margin-left: 10px;font-size: 10px" plain type="primary">
+                    {{ computeWorkingDay(item.createTime, item.completeTime) }}天
+                  </van-tag>
+                  <van-tag v-if="item.info !==''" style="margin-left: 10px;font-size: 10px" plain type="primary">详情
+                  </van-tag>
+                  <van-tag :plain="item.state !=='wait'" style="margin-left: 10px;font-size: 10px" type="primary">
+                    {{ displayStateFunc(item.state) }}
+                  </van-tag>
                 </div>
                 <!--任务情况-->
                 <div style="display: flex;justify-content: space-between;align-items: center">
                   <!--任务进度-->
-                  <van-slider :step="25" v-model="item.progress" :readonly="item.direction==='out'">
+                  <van-slider @change="changeProgress(item)" :step="25" v-model="item.progress"
+                              :readonly="item.direction==='out' || item.state ==='done'">
                     <template #button>
                       <div class="task-list-custom-button">{{ item.progress }}</div>
                     </template>
                   </van-slider>
                   <div style="width: 40px"></div>
                   <!--任务优先级-->
-                  <van-rate :readonly="item.direction==='out'" v-model="item.stars" :count="3"/>
+                  <van-rate :readonly="item.direction!=='none' || item.state ==='done'" v-model="item.stars" :count="3"/>
                 </div>
               </div>
             </div>
@@ -102,7 +108,7 @@
                 <template v-for="user in todo_user_list">
                   <div style="font-size: 10px;width: 80px;height: 22px;text-align: center;"
                        @click="todoUserSelect(user)">
-                    {{ user.userName }}
+                    {{ user.username }}
                   </div>
                 </template>
               </div>
@@ -111,8 +117,14 @@
               </template>
             </van-popover>
           </van-col>
+          <!--事项详情-->
+          <van-col span="5">
+            <van-button @click="taskDetailContentInput" style="width:60px" :plain="task_detail_input_content===''"
+                        type="primary" size="mini">详情
+            </van-button>
+          </van-col>
           <!--任务提交按钮-->
-          <van-col span="12">
+          <van-col span="7">
             <van-row justify="end">
               <van-col>
                 <van-button @click="todoSend" style="width:60px" type="primary" size="mini">提交</van-button>
@@ -123,16 +135,54 @@
       </div>
     </div>
   </div>
+  <!--  详情展示popup-->
+  <van-popup v-model:show="show_task_detail">
+    <van-row style="width: 350px;height: 250px;" justify="center">
+      <van-col style=";padding: 20px" span="24">
+        {{ popup_task_title }}
+      </van-col>
+      <van-col span="24">
+        {{ popup_task_detail_content }}
+      </van-col>
+    </van-row>
+  </van-popup>
 
+  <!--    详情录入-->
+  <van-popup v-model:show="show_task_detail_input">
+    <van-row style="width: 350px;height: 260px" justify="center">
+      <van-row style="width: 350px;padding: 16px" justify="start">
+        <div style="font-size: 14px;color:#646566;margin-right: 18px"> 优先:</div>
+        <van-rate v-model="task_detail_input_rate" :count="3"/>
+      </van-row>
+      <van-col span="24">
+        <!--任务录入框-->
+        <van-field class="my_scroll" style="height:200px"
+                   v-model="task_detail_input_content"
+                   rows="6"
+                   label="事项"
+                   type="textarea"
+                   maxlength="666"
+                   placeholder="事项详情"
+                   show-word-limit
+                   colon
+                   clearable
+                   label-width="40"
+        />
+      </van-col>
+    </van-row>
+  </van-popup>
+
+  <!--  </van-popup>-->
 </template>
 
 <script>
 import {reactive, ref} from 'vue';
 import '@vant/touch-emulator';
-import {List, Rate, Cell, Col, Row, Slider, Tag, Icon, Popover, Field, Button} from 'vant';
+import {List, Rate, Cell, Col, Row, Slider, Popup, Tag, Icon, Popover, Field, Dialog, Button} from 'vant';
 //vue3.0 global组件
 import {getCurrentInstance} from 'vue';
 import utils from "@/utils/common";
+import {useStore} from "vuex";
 
 let remote;
 export default {
@@ -149,6 +199,8 @@ export default {
     [Field.name]: Field,
     [Button.name]: Button,
     [Icon.name]: Icon,
+    [Dialog.name]: Dialog,
+    [Popup.name]: Popup,
   },
   data() {
     return {
@@ -160,18 +212,19 @@ export default {
       todo_user_show: false,
       todo_user_val: "自己",
       todo_user_id_val: "",
-      todo_user_list: [
-        {userId: "111", userName: "智能柜1"},
-        {userId: "131", userName: "智能柜2"},
-        {userId: "1151", userName: "智能柜3"},
-        {userId: "1161", userName: "智能柜4"},
-        {userId: "1131", userName: "智能柜5"},
-        {userId: "131", userName: "智能柜2"},
-        {userId: "1151", userName: "智能柜3"},
-        {userId: "1161", userName: "智能柜4"},
-        {userId: "1131", userName: "智能柜5"},
-      ],
       picMission: utils.picMission,
+      // 是否显示详情页面
+      show_task_detail: false,
+      // 详情页面 - 详情显示
+      popup_task_detail_content: "",
+      // 详情页面 - 任务title显示
+      popup_task_title: "",
+      // 是否显示详情录入页面
+      show_task_detail_input: false,
+      // 详情录入内容
+      task_detail_input_content: "",
+      // 详情录入优先度
+      task_detail_input_rate: 1,
 
 
     }
@@ -195,25 +248,122 @@ export default {
     ];
 
   },
+
   methods: {
+    // 计算这个任务已经存在了多少天，如果完成了，按照完成时间计算，不然那就是到现在的时间
+    computeWorkingDay: function (createTime, completeTime) {
+      let dateFinal = Date.now()
+      if (completeTime !== "") {
+        dateFinal = Date.parse(completeTime)
+      }
+      let t = ((dateFinal - Date.parse(createTime)) / (1000 * 3600 * 24)).toFixed(0)
+      return isNaN(t) ? "今" : t;
+    },
+    changeProgress: function (item) {
+      // 更新任务进度
+      // let i = {"taskNo": item.taskNo, "progress": item.progress}
+      if (item.progress === 100) {
+        Dialog.confirm({
+          title: '确定任务已经完成了吗',
+          // message: '弹窗内容',
+        }).then(() => {
+          // on confirm
+          this.updateTask(item)
+        }).catch(() => {
+          // on cancel
+          item.progress = 75
+        });
+      }
+
+
+    },
+    updateTask: function (item) {
+      let paramObj = JSON.parse(JSON.stringify(item))
+      // js 时间转换 ，转换成通用的2006-01-02 15:04:05 的模式
+      if (paramObj.createTime) {
+        paramObj.createTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.createTime))
+      }
+      if (paramObj.completeTime) {
+        paramObj.completeTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.completeTime))
+      }
+
+      utils.ipcAccess("http", {
+        url: utils.httpBaseUrl + "t/update_task_info",
+        method: "post",
+        parameter: paramObj
+      }).then(result => {
+        if (result.success === true) {
+          this.eventBus.emit('title_notify', {msg: '任务更新成功'})
+          // console.log(result.data)
+          item.state = result.data.state
+        } else {
+          this.eventBus.emit('title_notify', {type: "warning", msg: result.msg})
+        }
+      })
+    },
     // 获取头像图片
     getAvatar: function (a) {
-      console.log(a)
       return utils.avatars[parseInt(a)]
     },
     todoUserSelect: function (user) {
-      this.todo_user_val = user.userName
-      this.todo_user_id_val = user.userId
+      this.todo_user_val = user.username
+      this.todo_user_id_val = user.userid
       this.todo_user_show = false
     },
+    // 任务提交
     todoSend: function () {
 
-      this.eventBus.emit('title_notify', {msg: '操作成功'})
-      //恢复原样
-      this.todo_type_val = "需求"
-      this.todo_user_val = "自己"
-      this.todo_user_id_val = ""
+      if (this.todo === "") {
+        this.eventBus.emit('title_notify', {msg: '请录入任务内容', type: "warning"})
+        return
+      }
 
+      /*
+         todo: "测试事项3",
+         todoType: "需求",
+         direction: "in",
+         fromName: "王鑫钰",
+         fromId: "1587",
+         toName: "任浩",
+         toId: "1209",
+         stars: NumberInt("2"),
+         info: "测试事项\"2的详情",
+	    */
+      let ui = this.getUserInfo()
+
+
+      let param = {
+        "todo": this.todo,
+        "todoType": this.todo_type_val,
+        "fromName": ui.username,
+        "fromId": ui.userid,
+        "toName": this.todo_user_val === "自己" ? ui.username : this.todo_user_val,
+        "toId": this.todo_user_val === "自己" ? ui.userid : this.todo_user_id_val,
+        "info": this.task_detail_input_content,
+        "stars": this.task_detail_input_rate,
+      }
+
+      console.log(param)
+
+      utils.ipcAccess("http", {
+        url: utils.httpBaseUrl + "t/send_task_to_user",
+        method: "post",
+        parameter: param
+      }).then(result => {
+        console.log(result)
+        this.eventBus.emit('title_notify', {msg: '任务发送成功'})
+        //恢复原样
+        this.todo_type_val = "需求"
+        this.todo_user_val = "自己"
+        this.task_detail_input_content = ""
+        this.todo_user_id_val = ""
+        this.task_detail_input_rate = 1
+        this.todo = ""
+        this.onRefresh()
+      })
+    },
+    taskDetailContentInput: function () {
+      this.show_task_detail_input = true
     },
     todoTypeSelect: function (action, index) {
       this.todo_type_val = action.text
@@ -225,6 +375,7 @@ export default {
     },
     rightClick: function (item, $event) {
       let thatOnRefresh = this.onRefresh
+      let that = this
       const {Menu, MenuItem} = remote
       const menu = new Menu()
 
@@ -246,13 +397,20 @@ export default {
 
         }
       }))
-      menu.append(new MenuItem({type: 'separator'}))
-      menu.append(new MenuItem({
-        label: '  详情  ',
-        click() {
+      // 判断详情是否有值
+      if (item.info !== "") {
+        menu.append(new MenuItem({type: 'separator'}))
+        menu.append(new MenuItem({
+          label: '  详情  ',
+          click() {
+            that.popup_task_detail_content = item.info
+            that.popup_task_title = item.todo
+            that.show_task_detail = true;
 
-        }
-      }))
+          }
+        }))
+      }
+
       menu.append(new MenuItem({type: 'separator'}))
       menu.append(new MenuItem({
         label: '  刷新  ',
@@ -314,8 +472,14 @@ export default {
     getColorFromId: function (fromId) {
       return utils.getColorFromId(fromId)
     },
-    showFromName: function () {
-
+    displayStateFunc: function (state) {
+      if (state === "done") {
+        return "完成<div style='color:red'>dddd</div>"
+      } else if (state === "confirmed") {
+        return "已确认"
+      } else if (state === "wait") {
+        return "待确认"
+      }
     },
     keyDown: function (e) {
       console.log(e)
@@ -346,7 +510,7 @@ export default {
       }
 
       // 获取用户信息及任务列表
-      let ui = JSON.parse(localStorage.getItem("userInfo"))//localStorage取得对象需要转换成json使用
+      let ui = getUserInfo()
       utils.ipcAccess("http", {
         url: utils.httpBaseUrl + "t/get_task_list",
         method: "post",
@@ -380,16 +544,16 @@ export default {
                 url: utils.httpBaseUrl + "u/get_user_avatar",
                 method: "post",
                 parameter: {userids: userids}
-              }).then(ro => {
+              }).then(get_user_avatar_ro => {
                 // 不正的场合
-                if (!ro.success) {
+                if (!get_user_avatar_ro.success) {
                   //logging
-                  utils.ipcAccess("logging", {logType: "error", logContent: ro})
+                  utils.ipcAccess("logging", {logType: "error", logContent: get_user_avatar_ro})
                   return
                 }
                 // 正常的场合
-                if (ro.success) {
-                  let getAvatarObj = ro.data
+                if (get_user_avatar_ro.success) {
+                  let getAvatarObj = get_user_avatar_ro.data
                   let myTasks = []
                   tasks.forEach(function (item) {
                     if (item.direction === "none") {
@@ -412,7 +576,7 @@ export default {
                   })
                   tasks = myTasks
                   // 数据部分
-                  state.list = state.list.concat(tasks)
+                  state.list.push(...tasks)
                   state.loading = false;
                   if (state.list.length === count) {
                     state.finished = true;
@@ -423,6 +587,7 @@ export default {
           }
       )
 
+      console.log(state)
 
       // setTimeout(() => {
       //   if (state.refreshing) {
@@ -486,12 +651,27 @@ export default {
       onLoad();
     };
 
+    const store = useStore()
+    const getUserInfo = () => store.state.sys.userInfo
+
+    // 获取人员目标列表 todo_user_list  {userId: "111", userName: "智能柜1"},
+    let todo_user_list = reactive([])
+    utils.ipcAccess("http", {
+      url: utils.httpBaseUrl + "t/get_user_list",
+      method: "post",
+      parameter: {}
+    }).then(userList => {
+      todo_user_list.push(...userList.data.userList)
+    })
+
 
     return {
       state,
       onLoad,
       onRefresh,
       currentPage,
+      getUserInfo,
+      todo_user_list
     };
   },
 
