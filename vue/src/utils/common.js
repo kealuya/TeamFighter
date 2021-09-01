@@ -26,9 +26,11 @@ const electron = window.require('electron')
 let utils = {
     // nodejs ipcRenderer 交互，通过promise进行封装
     ipcAccess: function (channel, arg) {
+        let d = new Date()
+        arg.onceId = d.getTime()
         return new Promise((resolve, reject) => {
             electron.ipcRenderer.send(channel, arg)
-            electron.ipcRenderer.on(channel + '_reply', (event, arg) => {
+            electron.ipcRenderer.once(channel + '_reply_' + arg.onceId, (event, arg) => {
                 resolve(arg)
             })
         })
@@ -107,7 +109,30 @@ let utils = {
         userInfo: "userInfo",
     },
     //基础请求路径，后续通过配置进行选择
-    /*🎉*/httpBaseUrl: "http://localhost:8000/v1/"
+    /*🎉*/httpBaseUrl: "http://127.0.0.1:8000/v1/",
+
+    //日期格式化
+    dateFtt: function (fmt, date) {
+        //author: meizz
+        let o = {
+            'M+': date.getMonth() + 1,                 //月份
+            'd+': date.getDate(),                    //日
+            'h+': date.getHours(),                   //小时
+            'm+': date.getMinutes(),                 //分
+            's+': date.getSeconds(),                 //秒
+            'q+': Math.floor((date.getMonth() + 3) / 3), //季度
+            'S': date.getMilliseconds()             //毫秒
+        };
+        if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length))
+        }
+        for (let k in o) {
+            if (new RegExp('(' + k + ')').test(fmt)) {
+                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (('00' + o[k]).substr(('' + o[k]).length)))
+            }
+        }
+        return fmt
+    },
 
 }
 

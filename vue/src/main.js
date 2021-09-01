@@ -1,10 +1,12 @@
 import {createApp} from 'vue'
+import {createStore} from 'vuex'
 import mitt from 'mitt'
 import App from './App.vue'
 import router from './router'
+import store from './store'
 
 let app = createApp(App);
-
+app.use(store)
 
 //vue3.0 global组件 // app.config.globalProperties 必须写到app.use(router).mount('#app'); 这句话的上面才起作用，TMD
 /*
