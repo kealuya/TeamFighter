@@ -21,7 +21,7 @@
         <van-row style="height: 10px;"></van-row>
         <van-row justify="center" align="center">
           <van-col>
-            <img style="width: 60px;height: 60px;" src="../../public/profile/default5.png"/>
+            <img style=" width:60px;height: 60px" :src="avatars[userInfo.avatar]">
           </van-col>
         </van-row>
         <!--      空白-->
@@ -49,6 +49,8 @@
 
 import {Col, Row, Sidebar, SidebarItem, Notify} from 'vant';
 import {getCurrentInstance, ref} from 'vue';
+import utils from "@/utils/common";
+import {useStore} from "vuex";
 
 export default {
   name: 'Home',
@@ -61,7 +63,9 @@ export default {
   },
   data() {
     return {
-      active: 0
+      active: 0,
+      userInfo: this.getUserInfo(),
+      avatars: utils.avatars
     }
   },
   created() {
@@ -70,6 +74,9 @@ export default {
   },
   beforeUnmount() {
     this.eventBus.off('title_notify', this.onNotifyMsg)
+  },
+  mounted() {
+
   },
   methods: {
     onChange: function (index) {
@@ -92,10 +99,20 @@ export default {
       }
     },
     onNotifyMsg: function (e) {
-      Notify({type: 'primary', message: e.msg});
+      if (e.type) {
+        Notify({type: e.type, message: e.msg});
+      } else {
+        Notify({type: 'primary', message: e.msg});
+      }
     }
   },
-
+  setup() {
+    const store = useStore()
+    const getUserInfo = () => store.state.sys.userInfo
+    return {
+      getUserInfo,
+    }
+  }
 }
 </script>
 <style>
