@@ -51,7 +51,7 @@ import {Button} from 'vant';
 import {Tag} from 'vant';
 import {Field} from 'vant';
 import {Col, Row, Picker, RadioGroup, Radio} from 'vant';
-
+import {useStore} from 'vuex';
 import utils from "@/utils/common";
 
 export default {
@@ -79,18 +79,22 @@ export default {
 
   async beforeCreate() {
 
-    await utils.ipcAccess("store", {
-      method: [utils.storeMethod.get],
-      payload: [utils.storeKey.userInfo]
-    }).then(result => {
-      if (result != null) {
-        utils.ipcAccess("operate", {operate: "login"})
-      }
-    })
+    let ui = this.getUserInfo()
+    if (JSON.stringify(ui) !== "{}") {
+      utils.ipcAccess("operate", {operate: "login"})
+    }
+
+    // await utils.ipcAccess("store", {
+    //   method: [utils.storeMethod.get],
+    //   payload: [utils.storeKey.userInfo]
+    // }).then(result => {
+    //   if (result != null) {
+    //     utils.ipcAccess("operate", {operate: "login"})
+    //   }
+    // })
   },
   methods: {
     login: function () {
-
       this.msg = ""
       if (this.userid.trim() === "" || this.password.trim() === "") {
         this.msg = "用户名或密码不正确"
@@ -108,13 +112,17 @@ export default {
           if (JSON.stringify(ro.data) === "{}") {
             this.msg = "工号或密码输入不正确"
           } else {
-            utils.ipcAccess("store", {
-              method: [utils.storeMethod.put],
-              payload: [utils.storeKey.userInfo, ro.data]
-            }).then(() => {
-              localStorage.setItem("userInfo", JSON.stringify(ro.data))//localstorage里只能存string
-              utils.ipcAccess("operate", {operate: "login"})
-            })
+            // ⛹🏻‍暂时采用vuex处理登录问题
+            this.setUserInfo(ro.data)
+            utils.ipcAccess("operate", {operate: "login"})
+            // utils.ipcAccess("store", {
+            //   method: [utils.storeMethod.put],
+            //   payload: [utils.storeKey.userInfo, ro.data]
+            // }).then(() => {
+            //   // localStorage.setItem("userInfo", JSON.stringify(ro.data))//localstorage里只能存string
+            //
+            //   utils.ipcAccess("operate", {operate: "login"})
+            // })
           }
         }
       })
@@ -125,6 +133,16 @@ export default {
         operate: "quit",
         parameter: ""
       })
+    }
+  },
+  setup() {
+    const store = useStore()
+    const getUserInfo = () => store.state.sys.userInfo
+    const setUserInfo = (userInfo) => {
+      store.commit("setUserInfo", userInfo)
+    }
+    return {
+      setUserInfo, getUserInfo
     }
   }
 }
