@@ -19,7 +19,7 @@
               <!--左侧头像、人名部分-->
               <div style=" display: flex;flex-direction: column;justify-content: center;align-items: center">
                 <!--头像图片-->
-                <div style="width: 45px;height:45px;" @click="showFromName(item)">
+                <div style="width: 45px;height:45px;" @click="item">
                   <img :src="getAvatar(item.displayAvatar)" style="width: 45px;height:45px;">
                 </div>
                 <!--头像人名-->
@@ -68,7 +68,8 @@
                   </van-slider>
                   <div style="width: 40px"></div>
                   <!--任务优先级-->
-                  <van-rate :readonly="item.direction!=='none' || item.state ==='done'" v-model="item.stars" :count="3"/>
+                  <van-rate :readonly="item.direction!=='none' || item.state ==='done'" v-model="item.stars"
+                            :count="3"/>
                 </div>
               </div>
             </div>
@@ -273,6 +274,8 @@ export default {
           // on cancel
           item.progress = 75
         });
+      } else {
+        this.updateTask(item)
       }
 
 
@@ -474,7 +477,7 @@ export default {
     },
     displayStateFunc: function (state) {
       if (state === "done") {
-        return "完成<div style='color:red'>dddd</div>"
+        return "完成"
       } else if (state === "confirmed") {
         return "已确认"
       } else if (state === "wait") {
