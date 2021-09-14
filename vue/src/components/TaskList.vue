@@ -19,7 +19,7 @@
               <!--左侧头像、人名部分-->
               <div style=" display: flex;flex-direction: column;justify-content: center;align-items: center">
                 <!--头像图片-->
-                <div style="width: 45px;height:45px;" @click="item">
+                <div style="width: 45px;height:45px;">
                   <img :src="getAvatar(item.displayAvatar)" style="width: 45px;height:45px;">
                 </div>
                 <!--头像人名-->
@@ -69,6 +69,7 @@
                   <div style="width: 40px"></div>
                   <!--任务优先级-->
                   <van-rate :readonly="item.direction!=='none' || item.state ==='done'" v-model="item.stars"
+                            @change="changeStars(item)"
                             :count="3"/>
                 </div>
               </div>
@@ -277,8 +278,29 @@ export default {
       } else {
         this.updateTask(item)
       }
+    },
+    changeStars: function (item) {
+      let paramObj = JSON.parse(JSON.stringify(item))
+      // js 时间转换 ，转换成通用的2006-01-02 15:04:05 的模式
+      if (paramObj.createTime) {
+        paramObj.createTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.createTime))
+      }
+      if (paramObj.completeTime) {
+        paramObj.completeTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.completeTime))
+      }
 
-
+      utils.ipcAccess("http", {
+        url: utils.httpBaseUrl + "t/update_stars",
+        method: "post",
+        parameter: paramObj
+      }).then(result => {
+        if (result.success === true) {
+          this.eventBus.emit('title_notify', {msg: '优先级更新成功'})
+          item.stars = result.data.stars
+        } else {
+          this.eventBus.emit('title_notify', {type: "warning", msg: result.msg})
+        }
+      })
     },
     updateTask: function (item) {
       let paramObj = JSON.parse(JSON.stringify(item))

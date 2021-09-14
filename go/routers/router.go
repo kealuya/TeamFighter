@@ -29,6 +29,7 @@ func init() {
 				beego.NSRouter("/get_user_list", &TaskController{}, "Post:GetUserList"),
 				beego.NSRouter("/send_task_to_user", &TaskController{}, "Post:SendTaskToUser"),
 				beego.NSRouter("/update_task_info", &TaskController{}, "Post:UpdateTaskInfo"),
+				beego.NSRouter("/update_stars", &TaskController{}, "Post:UpdateStars"),
 				beego.NSRouter("/get_record_list", &RecordController{}, "Post:GetRecordList"),
 
 				//测试
