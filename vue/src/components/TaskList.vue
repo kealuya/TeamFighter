@@ -144,7 +144,16 @@
         {{ popup_task_title }}
       </van-col>
       <van-col span="24">
-        {{ popup_task_detail_content }}
+        <van-field class="my_scroll" style="height:100%"
+                   v-model="popup_task_detail_content"
+                   rows="6"
+                   label="事项"
+                   type="textarea"
+                   maxlength="666"
+                   colon
+                   readonly
+                   label-width="40"
+        />
       </van-col>
     </van-row>
   </van-popup>
@@ -182,7 +191,7 @@ import {reactive, ref} from 'vue';
 import '@vant/touch-emulator';
 import {List, Rate, Cell, Col, Row, Slider, Popup, Tag, Icon, Popover, Field, Dialog, Button} from 'vant';
 //vue3.0 global组件
-import {getCurrentInstance} from 'vue';
+import {getCurrentInstance, toRefs} from 'vue';
 import utils from "@/utils/common";
 import {useStore} from "vuex";
 
@@ -227,6 +236,8 @@ export default {
       task_detail_input_content: "",
       // 详情录入优先度
       task_detail_input_rate: 1,
+      // 是否显示任务确认和完成的 confirm页面
+      show_task_confirm: false,
 
 
     }
@@ -296,7 +307,6 @@ export default {
       }).then(result => {
         if (result.success === true) {
           this.eventBus.emit('title_notify', {msg: '优先级更新成功'})
-          item.stars = result.data.stars
         } else {
           this.eventBus.emit('title_notify', {type: "warning", msg: result.msg})
         }
@@ -319,8 +329,6 @@ export default {
       }).then(result => {
         if (result.success === true) {
           this.eventBus.emit('title_notify', {msg: '任务更新成功'})
-          // console.log(result.data)
-          item.state = result.data.state
         } else {
           this.eventBus.emit('title_notify', {type: "warning", msg: result.msg})
         }
@@ -404,22 +412,61 @@ export default {
       const {Menu, MenuItem} = remote
       const menu = new Menu()
 
-      menu.append(new MenuItem({
-        label: '  确认  ',
-        click() {
+      console.log(item)
+      // 判断确认是否有值
+      if (item.direction === "in") {
+        that = this
+        menu.append(new MenuItem({
+          label: '  确认  ',
+          click() {
+            let paramObj = JSON.parse(JSON.stringify(item))// TMD vue 3.0中这种做法是错误的
+            // js 时间转换 ，转换成通用的2006-01-02 15:04:05 的模式
+            if (paramObj.createTime) {
+              paramObj.createTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.createTime))
+            }
+            if (paramObj.completeTime) {
+              paramObj.completeTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.completeTime))
+            }
+            paramObj.state = "confirmed"
+            utils.ipcAccess("http", {
+              url: utils.httpBaseUrl + "t/update_task_info",
+              method: "post",
+              parameter: paramObj
+            }).then(result => {
+              if (result.success === true) {
+                that.eventBus.emit('title_notify', {msg: '任务状态更新成功'})
+                let {state} = toRefs(item)
+                state.value = "confirmed"
+              } else {
+                that.eventBus.emit('title_notify', {type: "warning", msg: result.msg})
+              }
+            })
+          }
+        }))
+      }
 
-        }
-      }))
       menu.append(new MenuItem({
         label: '  完成  ',
         click() {
-
+          Dialog.confirm({
+            title: '请确认',
+            message: '是否',
+          })
+              .then(() => {
+                // on confirm
+              })
+              .catch(() => {
+                // on cancel
+              });
         }
       }))
       menu.append(new MenuItem({
         label: '  废弃  ',
         click() {
-
+          // let paramObj = JSON.parse(JSON.stringify(item))
+          let {state} = toRefs(item)
+          console.log(state)
+          console.log(state.value = 'done')
         }
       }))
       // 判断详情是否有值
