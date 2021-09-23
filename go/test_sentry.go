@@ -3,10 +3,46 @@ package main
 import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
+	"runtime/debug"
 	"time"
 )
 
 func main() {
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:         "http://de3a21616b704e568fd0924af6ddc8cf@tutou.qcykj.com.cn:9000/2",
+		Environment: "",
+		Release:     "go@1.0.9",
+		Transport:   sentry.NewHTTPSyncTransport(),
+		// Enable printing of SDK debug messages.
+		// Useful when getting started or trying to figure something out.
+		Debug: true,
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	main2()
+}
+func main2() {
+
+	sentry.WithScope(func(scope *sentry.Scope) {
+scope.SetLevel()
+	})
+
+	event := sentry.NewEvent()
+	event.Message = "msg 3 "
+	event.Level = sentry.LevelFatal
+	sentry.CaptureEvent(event)
+	sentry.Flush(1 * time.Second)
+
+
+	event.Message = "msg 4 "
+
+
+
+}
+
+func main1() {
 	/*
 		常用参数：
 		　　DSN ：项目的地址，用于收集错误信息的 sentry 分配的地址
@@ -30,17 +66,17 @@ func main() {
 		　　withScope((scope)=>{}) : 设置一个零时的 scope 信息到 context 上面
 	*/
 	//配置sentry,自动收集log
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         "http://6ba07683b46a42f4b8ac2a9aa83fbdd6@221.238.155.34:12001/2",
-		Environment: "",
-		Release:     "syfyy_go@1.0.0",
-		// Enable printing of SDK debug messages.
-		// Useful when getting started or trying to figure something out.
-		Debug: true,
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
+	//err := sentry.Init(sentry.ClientOptions{
+	//	Dsn:         "http://de3a21616b704e568fd0924af6ddc8cf@tutou.qcykj.com.cn:9000/2",
+	//	Environment: "",
+	//	Release:     "go@1.0.9",
+	//	// Enable printing of SDK debug messages.
+	//	// Useful when getting started or trying to figure something out.
+	//	Debug: true,
+	//})
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
 	//sentry.ConfigureScope(func(scope *sentry.Scope) {
 	//	scope.SetTag("syfyy", "go")
 	//	scope.SetContext("device","name")
@@ -48,53 +84,62 @@ func main() {
 	//	scope.SetExtra("我的Extra","oookkk")
 	//})
 
-	sentry.WithScope(func(scope *sentry.Scope) {
+	//sentry.WithScope(func(scope *sentry.Scope) {
 
-		//scope.SetTag("syfyy", "go")
-		//scope.SetUser(sentry.User{
-		//	Email:     "kq@qq.com",
-		//	ID:        "ttoonnyy",
-		//	IPAddress: "",
-		//	Username:  "tony",
-		//})
-		//scope.SetContext("device", "name")
-		//scope.SetLevel(sentry.LevelWarning)
-		//scope.SetExtra("我的Extra", "oookkk")
-		//l := debug.Stack()
-		//sentry.CaptureMessage("测试消息6666666666" + string(l))
-		//sentry.CaptureException(errors.New("ddddd"))
-		e := sentry.NewEvent()
-		e.Message = "我是快乐的event6_测试"
-		e.Timestamp = time.Now()
-		e.Dist = "DistDistDist"//分发中查看
-		//e.Fingerprint = []string{"邵逸夫医院_go_记录"} //决定问题是否是一组，会被合并，在【事件】中区分
-		e.Logger="LoggerLoggerLogger"//副标题
-		m:=make(map[string]string)
-		m["Modules1"] ="Modules111"
-		m["Modules2"] ="Modules222"
-		e.Modules =m
-		e.User = sentry.User{
-			Email:     "kealuya@126.com",
-			ID:        "renhao",
-			IPAddress: "192.128.222.111",// 有格式check，需要写正确
-			Username:  "2222222",
-		}
-		e.Level = sentry.LevelError
-		extra := make(map[string]interface{})
-		// 所有自定义都写到这里
-		extra["1"] = "蒙多，想去哪就去哪"
-		e.Extra = extra
+	//scope.SetTag("syfyy", "go")
+	//scope.SetUser(sentry.User{
+	//	Email:     "kq@qq.com",
+	//	ID:        "ttoonnyy",
+	//	IPAddress: "",
+	//	Username:  "tony",
+	//})
+	//scope.SetContext("device", "name")
+	//scope.SetLevel(sentry.LevelWarning)
+	//scope.SetExtra("我的Extra", "oookkk")
+	//l := debug.Stack()
+	//sentry.CaptureMessage("测试消息6666666666" + string(l))
+	//sentry.CaptureException(errors.New("ddddd"))
+	e := sentry.NewEvent()
+	e.Message = "我是快乐的event2222_测试"
+	e.Timestamp = time.Now()
+	e.Dist = "分发中查看" //分发中查看
+	//e.Fingerprint = []string{"邵逸夫医院_go_记录"} //决定问题是否是一组，会被合并，在【事件】中区分
+	e.Logger = "我是快乐的副标题" //副标题
 
-		sentry.CaptureEvent(e)
+	tag_map := make(map[string]string)
+	tag_map["差旅"] = "差旅移动端1.2"
+	e.Tags = tag_map
+	m := make(map[string]string)
+	m["Modules1"] = "Modules111"
+	m["Modules2"] = "Modules222"
+	e.Modules = m
+	e.User = sentry.User{
+		Email:     "kealuya@126.com",
+		ID:        "renhao",
+		IPAddress: "192.128.222.111", // 有格式check，需要写正确
+		Username:  "2222222",
+	}
+	e.Level = sentry.LevelError
+	extra := make(map[string]interface{})
+	// 附加数据：：所有自定义都写到这里
+	extra["1"] = "蒙多，想去哪就去哪"
+	extra["error_info"] = string(debug.Stack())
+	e.Extra = extra
+
+	bc := make(map[string]interface{})
+	bc["step1"] = "step1 detail info"
+	bc["step2"] = "step2 detail info"
+	bc["step3"] = "step3 detail info"
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Category: "auth",
+		Message:  "Authenticated user " + "test_Breadcrumb",
+		Level:    sentry.LevelDebug,
+		Data:     bc,
 	})
-	sentry.Flush(time.Second * 5)
-	//sentry.AddBreadcrumb(&sentry.Breadcrumb{
-	//	Category: "auth",
-	//	Message: "Authenticated user " + "test_Breadcrumb",
-	//	Level: sentry.LevelDebug,
-	//	Data: map[string]interface{}{},
-	//
-	//});
+
+	sentry.CaptureEvent(e)
+	//})
+	//sentry.Flush(time.Second * 5)
 
 	fmt.Println("it is ok")
 	time.Sleep(5 * time.Second)
