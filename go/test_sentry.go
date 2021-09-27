@@ -26,19 +26,16 @@ func main() {
 func main2() {
 
 	sentry.WithScope(func(scope *sentry.Scope) {
-scope.SetLevel()
+
+		event := sentry.NewEvent()
+		event.Message = "msg 3 "
+		event.Level = sentry.LevelFatal
+		sentry.CaptureEvent(event)
+		sentry.Flush(1 * time.Second)
+
+		event.Message = "msg 4 "
+
 	})
-
-	event := sentry.NewEvent()
-	event.Message = "msg 3 "
-	event.Level = sentry.LevelFatal
-	sentry.CaptureEvent(event)
-	sentry.Flush(1 * time.Second)
-
-
-	event.Message = "msg 4 "
-
-
 
 }
 
