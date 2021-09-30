@@ -339,15 +339,16 @@ func (self *TaskController) UpdateTaskInfo() {
 		bsonM := bson.M{}
 		for k, v := range requestObject {
 			if !strings.Contains(k, "display") {
-				if (k == "createTime" || k == "completeTime") && v != "" {
-					t, err_timeParse := time.Parse("2006-01-02 15:04:05", v.(string))
-					common.ErrorHandler(err_timeParse, "时间转换错误 %v")
-					bsonM[k] = t
-				} else {
-					bsonM[k] = v
-				}
+				//if (k == "createTime" || k == "completeTime") && v != "" {
+				//	//t, err_timeParse := time.Parse("2006-01-02 15:04:05", v.(string))
+				//	//common.ErrorHandler(err_timeParse, "时间转换错误 %v")
+				//	bsonM[k] = t
+				//} else {
+				bsonM[k] = v
+				//}
 			}
 		}
+
 		// 根据用户所选进度，匹配对应任务状态
 		if bsonM["progress"].(float64) == 100 {
 			bsonM["state"] = "done"

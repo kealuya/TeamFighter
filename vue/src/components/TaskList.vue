@@ -191,6 +191,8 @@ import {reactive, ref} from 'vue';
 import '@vant/touch-emulator';
 import {List, Rate, Cell, Col, Row, Slider, Popup, Tag, Icon, Popover, Field, Dialog, Button} from 'vant';
 //vue3.0 global组件
+import _ from 'lodash'
+import XEUtils from 'xe-utils'
 import {getCurrentInstance, toRefs} from 'vue';
 import utils from "@/utils/common";
 import {useStore} from "vuex";
@@ -215,6 +217,7 @@ export default {
   },
   data() {
     return {
+      bak_items: {},
       sort: "createTime", // createTime,stars,
       todo: "",
       todo_type_popover: false,
@@ -246,6 +249,9 @@ export default {
     // 解除快捷键绑定
     window.removeEventListener('keydown', this.shortcut)
   },
+  beforeUpdate() {
+    this.bak_items = _.cloneDeep(this.state.list)
+  },
   created() {
     remote = window.require("electron").remote
     // 追加快捷键绑定
@@ -265,16 +271,22 @@ export default {
   methods: {
     // 计算这个任务已经存在了多少天，如果完成了，按照完成时间计算，不然那就是到现在的时间
     computeWorkingDay: function (createTime, completeTime) {
-      let dateFinal = Date.now()
-      if (completeTime !== "") {
-        dateFinal = Date.parse(completeTime)
+      let dateFinal = XEUtils.toDateString(new Date(), 'yyyy-MM-dd HH:mm:ss')
+      if (completeTime && completeTime !== "") {
+        dateFinal = XEUtils.toDateString(completeTime, 'yyyy-MM-dd HH:mm:ss')
       }
-      let t = ((dateFinal - Date.parse(createTime)) / (1000 * 3600 * 24)).toFixed(0)
-      return isNaN(t) ? "今" : t;
+      let t = XEUtils.getDateDiff(XEUtils.toDateString(createTime, 'yyyy-MM-dd HH:mm:ss'), dateFinal)
+      let m = t.MM === 0 ? "" : t.MM + "月"
+      if (m === "") {
+        return t.dd === 0 ? "今" : t.dd;
+      } else {
+        return m + t.dd;
+      }
     },
     changeProgress: function (item) {
       // 更新任务进度
       // let i = {"taskNo": item.taskNo, "progress": item.progress}
+      console.log(this.bak_items)
       if (item.progress === 100) {
         Dialog.confirm({
           title: '确定任务已经完成了吗',
@@ -282,12 +294,18 @@ export default {
         }).then(() => {
           // on confirm
           this.updateTask(item)
+          this.bak_items = _.cloneDeep(this.state.list)
         }).catch(() => {
           // on cancel
-          item.progress = 75
+          this.bak_items.forEach((i) => {
+            if (i.todoNo === item.todoNo) {
+              item.progress = i.progress
+            }
+          })
         });
       } else {
         this.updateTask(item)
+        this.bak_items = _.cloneDeep(this.state.list)
       }
     },
     changeStars: function (item) {
@@ -315,12 +333,13 @@ export default {
     updateTask: function (item) {
       let paramObj = JSON.parse(JSON.stringify(item))
       // js 时间转换 ，转换成通用的2006-01-02 15:04:05 的模式
-      if (paramObj.createTime) {
-        paramObj.createTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.createTime))
-      }
-      if (paramObj.completeTime) {
-        paramObj.completeTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.completeTime))
-      }
+      // if (paramObj.createTime) {
+      //   paramObj.createTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.createTime))
+      // }
+      //
+      // if (paramObj.completeTime) {
+      //   paramObj.completeTime = utils.dateFtt("yyyy-MM-dd hh:mm:ss", new Date(paramObj.completeTime))
+      // }
 
       utils.ipcAccess("http", {
         url: utils.httpBaseUrl + "t/update_task_info",
@@ -449,15 +468,12 @@ export default {
         label: '  完成  ',
         click() {
           Dialog.confirm({
-            title: '请确认',
-            message: '是否',
-          })
-              .then(() => {
-                // on confirm
-              })
-              .catch(() => {
-                // on cancel
-              });
+            title: '确认关闭任务？',
+          }).then(() => {
+            // on confirm
+          }).catch(() => {
+            // on cancel
+          });
         }
       }))
       menu.append(new MenuItem({
@@ -596,6 +612,7 @@ export default {
             }
             // 正常的场合
             if (ro.success) {
+              console.log("ro.data", ro.data);
               let count = ro.data.count;
               let tasks = ro.data.tasks;
 
@@ -626,6 +643,7 @@ export default {
                 // 正常的场合
                 if (get_user_avatar_ro.success) {
                   let getAvatarObj = get_user_avatar_ro.data
+
                   let myTasks = []
                   tasks.forEach(function (item) {
                     if (item.direction === "none") {
