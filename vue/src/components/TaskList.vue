@@ -286,7 +286,6 @@ export default {
     changeProgress: function (item) {
       // 更新任务进度
       // let i = {"taskNo": item.taskNo, "progress": item.progress}
-      console.log(this.bak_items)
       if (item.progress === 100) {
         Dialog.confirm({
           title: '确定任务已经完成了吗',
@@ -612,7 +611,6 @@ export default {
             }
             // 正常的场合
             if (ro.success) {
-              console.log("ro.data", ro.data);
               let count = ro.data.count;
               let tasks = ro.data.tasks;
 
