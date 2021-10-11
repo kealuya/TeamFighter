@@ -296,11 +296,13 @@ export default {
           this.bak_items = _.cloneDeep(this.state.list)
         }).catch(() => {
           // on cancel
-          this.bak_items.forEach((i) => {
+          this.bak_items.some((i) => {
             if (i.todoNo === item.todoNo) {
               item.progress = i.progress
+              return true
             }
           })
+          this.bak_items = _.cloneDeep(this.state.list)
         });
       } else {
         this.updateTask(item)

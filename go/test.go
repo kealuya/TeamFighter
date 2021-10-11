@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
 
 type T struct {
 	a string
@@ -12,8 +9,8 @@ type T struct {
 
 func main() {
 
-	s := time.Unix(1632257515, 0).Format("2006-01-02 15:04:05")
-	fmt.Println(s)
+	s := [...]int{1, 2, 3, 4, 5, 6}
+	fmt.Println(s[2:5])
 
 }
 

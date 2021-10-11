@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
+	"github.com/pkg/errors"
 	"runtime/debug"
 	"time"
 )
@@ -21,7 +22,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	main2()
+	main1()
 }
 func main2() {
 
@@ -97,9 +98,9 @@ func main1() {
 	//sentry.CaptureMessage("测试消息6666666666" + string(l))
 	//sentry.CaptureException(errors.New("ddddd"))
 	e := sentry.NewEvent()
-	e.Message = "我是快乐的event2222_测试"
+	e.Message = "终端测试~！"
 	e.Timestamp = time.Now()
-	e.Dist = "分发中查看" //分发中查看
+	//e.Dist = "分发中查看" //分发中查看
 	//e.Fingerprint = []string{"邵逸夫医院_go_记录"} //决定问题是否是一组，会被合并，在【事件】中区分
 	e.Logger = "我是快乐的副标题" //副标题
 
@@ -127,12 +128,25 @@ func main1() {
 	bc["step1"] = "step1 detail info"
 	bc["step2"] = "step2 detail info"
 	bc["step3"] = "step3 detail info"
+
+	// 美国洛杉矶PDT
+	loc, _ := time.LoadLocation("America/Los_Angeles")
+
 	sentry.AddBreadcrumb(&sentry.Breadcrumb{
-		Category: "auth",
-		Message:  "Authenticated user " + "test_Breadcrumb",
-		Level:    sentry.LevelDebug,
-		Data:     bc,
+		Category:  "auth",
+		Message:   "Authenticated user " + "test_Breadcrumb",
+		Data:      bc,
+		Level:     sentry.LevelDebug,
+		Timestamp: time.Now().In(loc),
+		Type:      "default",
 	})
+	e.Exception = []sentry.Exception{
+		sentry.Exception{
+			Type:       "如果有Exception，那么我就是主标题",
+			Value:      "我可是正经的副标题",
+			Stacktrace: sentry.ExtractStacktrace(errors.New("st111 error")),
+		},
+	}
 
 	sentry.CaptureEvent(e)
 	//})
