@@ -8,6 +8,30 @@ import (
 	"runtime/debug"
 	"time"
 )
+/*
+使用例子
+func main() {
+
+	i := make(map[string]interface{})
+	i["id"] = "112233"
+	i["name"] = "Tome"
+	input, _ := json.Marshal(i)
+	r, e := SentryTestDemo(string(input))
+	fmt.Println(r, e)
+}
+func SentryTestDemo(input string) (result interface{}, errContent error) {
+
+	defer common.RecoverHandler(func(recover_err error) {
+		errContent = recover_err
+		result = nil
+	}, "差旅对账管理", input)
+
+	_, err := os.Open("file.txt")
+	common.ErrorHandler(err, "意料之中的错误::%v")
+	//log.Fatalln("")
+	return nil, nil
+}
+ */
 
 // fixme 系统版本
 var VERSION = "XX系统@1.2.23"
@@ -89,5 +113,4 @@ func SendEventToSentry(inputInfo interface{}, errorLevel sentry.Level, system st
 	}
 
 	sentry.CaptureEvent(e)
-	//sentry.Flush(time.Second * 5)
 }

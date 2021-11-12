@@ -5,9 +5,9 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/pkg/errors"
 	"log"
 	"os"
 	"os/exec"
@@ -16,6 +16,50 @@ import (
 	"strconv"
 	"strings"
 )
+
+//共通错误recover处理方法 20211111
+// fixme
+var IS_NEED_SENTRY = true
+
+// input_param 第一个参数是【系统模块名称记述】
+// input_param 第二个参数是【传入入参】
+func RecoverHandler(f func(recover_err error), input_param ...interface{}) {
+	if err := recover(); err != nil {
+		// log 打印
+		logs.Error(err)
+		logs.Error(string(debug.Stack()))
+		// sentry发送配置
+		if IS_NEED_SENTRY && len(input_param) > 0 {
+			i := make(map[string]interface{})
+			if len(input_param) == 2 {
+				i["入参"] = input_param[1]
+			}
+
+			SendErrorToSentry(err, input_param[0].(string), i)
+		}
+		// 程序错误处理
+		if f != nil {
+			_, ok := err.(error)
+			if ok {
+				f(err.(error))
+			} else {
+				f(errors.New(err.(string)))
+			}
+		}
+
+	}
+}
+
+//共通错误error处理方法 20211111
+func ErrorHandler(err error, v ...string) {
+	if err != nil {
+		if len(v) > 0 {
+			log.Panicln(fmt.Errorf(v[0], err))
+		} else {
+			log.Panicln(err)
+		}
+	}
+}
 
 //获取当前路径
 func GetCurrentPath() string {
@@ -47,27 +91,13 @@ func GetGoroutineID() string {
 	return "goroutine:" + fmt.Sprintf(" %v", n)
 }
 
-//共通错误recover处理方法 20200801
-func RecoverHandler(f func(father_error interface{})) {
-	if err := recover(); err != nil {
-		logs.Error("发生系统错误::", err)
-		SendErrorToSentry(err, "系统", nil)
-		logs.Error(string(debug.Stack()))
-		if f != nil {
-			f(err)
-		}
-	}
+type WrappedError struct {
+	info  error
+	input interface{}
 }
 
-//共通错误error处理方法 20200801
-func ErrorHandler(err error, v ...string) {
-	if err != nil {
-		if len(v) == 1 {
-			log.Panicln(fmt.Errorf(v[0], err))
-		} else {
-			log.Panicln(err, v)
-		}
-	}
+func (receiver WrappedError) Error() string {
+	return receiver.info.Error()
 }
 
 //字符串md5加密
