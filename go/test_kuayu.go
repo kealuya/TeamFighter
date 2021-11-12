@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func mdain() {
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		allowOrigin := []string{"http://localhost:3000", ""}

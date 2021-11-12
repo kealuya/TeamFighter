@@ -8,6 +8,7 @@ require (
 	github.com/getsentry/sentry-go v0.11.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/goburrow/cache v0.1.2
+	github.com/pkg/errors v0.9.1
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/spf13/viper v1.7.1

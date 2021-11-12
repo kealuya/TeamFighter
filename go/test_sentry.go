@@ -2,13 +2,34 @@ package main
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"reflect"
 	"runtime/debug"
+	"team_fighter_go/common"
 	"time"
 )
 
 func main() {
+
+	dd()
+	fmt.Println("dd")
+}
+func dd() {
+	extraMap := make(map[string]interface{})
+	extraMap["SendToUsers"] = []string{"任浩", "展保华"}
+	common.SendInfoToSentry("info消息111111", "测试系统", extraMap)
+
+	defer common.RecoverHandler(nil)
+
+	_, err := ioutil.ReadAll(nil)
+	fmt.Println("reflect::", reflect.TypeOf(err).String())
+
+	common.ErrorHandler(err, "%v")
+}
+func madin() {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:         "http://de3a21616b704e568fd0924af6ddc8cf@tutou.qcykj.com.cn:9000/2",
 		Environment: "",
@@ -22,21 +43,25 @@ func main() {
 		fmt.Println(err)
 	}
 
-	main1()
+	main_test()
 }
-func main2() {
 
-	sentry.WithScope(func(scope *sentry.Scope) {
+func main_test() {
 
-		event := sentry.NewEvent()
-		event.Message = "msg 3 "
-		event.Level = sentry.LevelFatal
-		sentry.CaptureEvent(event)
-		sentry.Flush(1 * time.Second)
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error(err)
+			main_ok(err)
+		}
+	}()
 
-		event.Message = "msg 4 "
+	fmt.Println("start!!")
 
-	})
+	//log.Panicln(errors.New("logic error"))
+	var f interface{}
+	ff := f.(string)
+
+	fmt.Println("end!!", ff)
 
 }
 
@@ -154,4 +179,73 @@ func main1() {
 
 	fmt.Println("it is ok")
 	time.Sleep(5 * time.Second)
+}
+
+func main_ok(in interface{}) {
+
+	// error错误封装
+	var err error
+	switch in.(type) {
+	case error:
+		err = in.(error)
+	case string:
+		err = errors.New(in.(string))
+	}
+
+	fmt.Println("reflect.TypeOf(err).String()::", reflect.TypeOf(err).String())
+
+	fmt.Println("err.Error()::", err.Error())
+
+	e := sentry.NewEvent()
+
+	e.Message = err.Error()
+	e.Timestamp = time.Now()
+	e.Logger = "我是快乐的副标题" //副标题
+
+	e.User = sentry.User{
+		Email:     "kealuya@126.com",
+		ID:        "renhao",
+		IPAddress: "192.128.222.111", // 有格式check，需要写正确
+		Username:  "2222222",
+	}
+	e.Level = sentry.LevelWarning
+	extra := make(map[string]interface{})
+	// 附加数据：：所有自定义都写到这里
+	extra["1"] = "蒙多，想去哪就去哪"
+	extra["Debug Stack"] = string(debug.Stack())
+	e.Extra = extra
+
+	bc := make(map[string]interface{})
+	bc["step1"] = "step1 detail info"
+	bc["step2"] = "step2 detail info"
+	bc["step3"] = "step3 detail info"
+
+	// 美国洛杉矶PDT
+	loc, _ := time.LoadLocation("America/Los_Angeles")
+
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Data:      bc,
+		Timestamp: time.Now().In(loc),
+	})
+	//e.Exception = append(e.Exception, sentry.Exception{
+	//	Value:      err.Error()+"11",
+	//	Type:       reflect.TypeOf(err).String(),
+	//	Stacktrace: sentry.ExtractStacktrace(err),
+	//})
+	e.Exception = []sentry.Exception{
+		sentry.Exception{
+			Value:      reflect.TypeOf(err).String(),
+			Type:       err.Error(),
+			Stacktrace: sentry.NewStacktrace(),
+		},
+	}
+
+	sentry.CaptureEvent(e)
+	//sentry.CaptureException(errors.New("333"))
+	//})
+	//sentry.Flush(time.Second * 5)
+
+	fmt.Println("it is ok")
+	time.Sleep(5 * time.Second)
+
 }

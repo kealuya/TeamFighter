@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func maifn() {
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		body, _ := ioutil.ReadAll(request.Body)

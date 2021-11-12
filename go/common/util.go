@@ -48,9 +48,10 @@ func GetGoroutineID() string {
 }
 
 //共通错误recover处理方法 20200801
-func RecoverHandler(f func(rh_err interface{})) {
+func RecoverHandler(f func(father_error interface{})) {
 	if err := recover(); err != nil {
 		logs.Error("发生系统错误::", err)
+		SendErrorToSentry(err, "系统", nil)
 		logs.Error(string(debug.Stack()))
 		if f != nil {
 			f(err)
@@ -120,4 +121,21 @@ func CopyMap(m map[string]interface{}) map[string]interface{} {
 	}
 
 	return cp
+}
+
+func GoroutineId() int {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("panic recover:panic info:%v", err)
+		}
+	}()
+
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine "))[0]
+	id, err := strconv.Atoi(idField)
+	if err != nil {
+		panic(fmt.Sprintf("cannot get goroutine id: %v", err))
+	}
+	return id
 }
