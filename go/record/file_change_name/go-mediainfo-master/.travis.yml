@@ -1,0 +1,12 @@
+language: go
+go:
+  - 1.2
+  - release
+  - tip
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libmediainfo-dev
+
+script:
+  - go test -v ./...
