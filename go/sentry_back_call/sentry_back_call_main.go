@@ -35,9 +35,25 @@ type Item struct {
 }
 
 type SendUsers struct {
-	Name string `json:"name"`
-	Qyh  string `json:"qyh"`
-	Tel  string `json:"tel"`
+	Name     string `json:"name"`
+	Tel      string `json:"tel"`
+	SendType string `json:"send_type"` // wx微信 dx短信
+}
+
+var CONFIG_FILE *ConfigJson
+
+func init() {
+	CONFIG_FILE = readConfig()
+}
+
+func SendMsgToDev() {
+
+	for _, v := range CONFIG_FILE.List {
+		if v.System == si.Logger {
+			(v.SendUsers)
+		}
+	}
+
 }
 
 func main() {
@@ -58,13 +74,6 @@ func main() {
 			return
 		}
 
-		config := readConfig()
-		for _, v := range config.List {
-			if v.System == si.Logger {
-				SendMsgToDev(v.SendUsers)
-			}
-		}
-
 		writer.WriteHeader(200)
 	})
 	err := http.ListenAndServe(":9999", nil)
@@ -72,10 +81,6 @@ func main() {
 		logs.Error(err)
 		log.Fatalln(err)
 	}
-
-}
-
-func SendMsgToDev() {
 
 }
 
