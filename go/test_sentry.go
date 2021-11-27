@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"team_fighter_go/common"
@@ -14,20 +15,24 @@ import (
 
 func main() {
 
-	dd()
-	fmt.Println("dd")
+	i := make(map[string]interface{})
+	i["id"] = "112233"
+	i["name"] = "Tome"
+	input, _ := json.Marshal(i)
+	r, e := SentryTestDemo(string(input))
+	fmt.Println(r, e)
 }
-func dd() {
-	extraMap := make(map[string]interface{})
-	extraMap["SendToUsers"] = []string{"任浩", "展保华"}
-	common.SendInfoToSentry("info消息111111", "测试系统", extraMap)
+func SentryTestDemo(input string) (result interface{}, errContent error) {
 
-	defer common.RecoverHandler(nil)
+	defer common.RecoverHandler(func(recover_err error) {
+		errContent = recover_err
+		result = nil
+	}, "差旅对账管理", input)
 
-	_, err := ioutil.ReadAll(nil)
-	fmt.Println("reflect::", reflect.TypeOf(err).String())
-
-	common.ErrorHandler(err, "%v")
+	_, err := os.Open("file.txt")
+	common.ErrorHandler(err, "意料之中的错误221::%v")
+	//log.Fatalln("")
+	return nil, nil
 }
 func madin() {
 	err := sentry.Init(sentry.ClientOptions{
