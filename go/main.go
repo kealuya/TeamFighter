@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"team_fighter_go/common"
+	_ "team_fighter_go/common"
 	_ "team_fighter_go/configs" //系统初始化
 	"team_fighter_go/controllers"
 	"team_fighter_go/db"

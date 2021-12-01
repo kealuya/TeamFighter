@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+func mai22n() {
+	signMd5String := common.StringToMd5(`66666666app_idgylxttemplate_codeSMS_205442831timestamp2021-11-16 17:50:13template_param{"subject":"测试","applicant":"张三"}66666666`)
+	fmt.Println(signMd5String)
+
+
+}
 func main() {
 
 	// 短信请求 demo

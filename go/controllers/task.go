@@ -213,7 +213,7 @@ func (self *TaskController) GetUserList() {
 		logs.Error(fmt.Sprintf("发生错误::%s - input::%+v", try_err, string(jsonByte)))
 	}
 }
-
+ 
 func (self *TaskController) SendTaskToUser() {
 	defer self.ServeJSON()
 	/*
