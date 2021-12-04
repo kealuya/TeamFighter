@@ -1,7 +1,7 @@
 package main
 
 import (
-	"file_change_name/go-mediainfo-master"
+	"file_change_media_file_name/go-mediainfo-master"
 	"flag"
 	"log"
 	"os"
