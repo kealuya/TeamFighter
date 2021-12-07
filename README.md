@@ -15,7 +15,12 @@
 * 后端才用go语言编写（beego）
 * 引入阿里云短息模块，提供短信推送
 * 引入企业微信，可以多人通知组内人员
- 
+
+感谢jetbrains提供帮助
+https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png
+
+
+
 ## License
 
 [CC0 1.0 (Public Domain)](LICENSE.md)
