@@ -17,9 +17,7 @@
 * 引入企业微信，可以多人通知组内人员
 
 感谢jetbrains提供帮助
-https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png
-
-
+ ![image](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png)
 
 ## License
 
